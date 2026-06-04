@@ -4,13 +4,10 @@ const fallbackApiBaseUrl = import.meta.env.VITE_API_URL_FALLBACK?.trim() || 'htt
 
 const isLocalDevelopment =
   import.meta.env.DEV ||
-  typeof window !== 'undefined' &&
-    ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname))
 
 const apiBaseUrls = Array.from(
-  new Set(
-    [deployedApiBaseUrl, ...(isLocalDevelopment ? [fallbackApiBaseUrl] : [])].filter(Boolean),
-  ),
+  new Set([deployedApiBaseUrl, ...(isLocalDevelopment ? [fallbackApiBaseUrl] : [])].filter(Boolean)),
 )
 
 class HttpError extends Error {
@@ -92,8 +89,35 @@ export const api = {
         token,
         body: JSON.stringify(body),
       }),
-    list: (token: string) =>
-      request<{ data: import('../types').FormSubmission[] }>('/api/forms', {
+    list: (token: string, params?: { page?: number; limit?: number }) => {
+      const searchParams = new URLSearchParams()
+
+      if (params?.page) {
+        searchParams.set('page', String(params.page))
+      }
+
+      if (params?.limit) {
+        searchParams.set('limit', String(params.limit))
+      }
+
+      const query = searchParams.toString()
+      return request<{
+        data: import('../types').FormSubmission[]
+        pagination: { page: number; limit: number; total: number; hasMore: boolean }
+      }>(`/api/forms${query ? `?${query}` : ''}`, {
+        method: 'GET',
+        token,
+      })
+    },
+    summary: (token: string) =>
+      request<{
+        data: {
+          total: number
+          returned: number
+          pending: number
+          latestCreatedAt: string | null
+        }
+      }>('/api/forms/summary', {
         method: 'GET',
         token,
       }),

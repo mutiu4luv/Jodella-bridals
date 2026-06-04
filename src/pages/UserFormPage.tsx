@@ -244,7 +244,7 @@ export default function UserFormPage() {
               onClick={() => navigate('/login')}
               className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
             >
-              Login / Register
+              Login 
             </button>
           </div>
         </header>

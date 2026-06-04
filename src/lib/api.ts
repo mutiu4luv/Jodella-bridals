@@ -2,8 +2,15 @@ const deployedApiBaseUrl =
   import.meta.env.VITE_API_URL?.trim() || 'https://jordela-bridals-backend.vercel.app'
 const fallbackApiBaseUrl = import.meta.env.VITE_API_URL_FALLBACK?.trim() || 'http://localhost:5000'
 
+const isLocalDevelopment =
+  import.meta.env.DEV ||
+  typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1'].includes(window.location.hostname)
+
 const apiBaseUrls = Array.from(
-  new Set([deployedApiBaseUrl, fallbackApiBaseUrl].filter(Boolean)),
+  new Set(
+    [deployedApiBaseUrl, ...(isLocalDevelopment ? [fallbackApiBaseUrl] : [])].filter(Boolean),
+  ),
 )
 
 class HttpError extends Error {

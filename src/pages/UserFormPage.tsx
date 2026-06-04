@@ -1,8 +1,6 @@
 import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
 import heroImage from '../assets/hero.png'
-import { useAuth } from '../context/useAuth'
 import { api } from '../lib/api'
 
 type FormState = {
@@ -129,10 +127,6 @@ export default function UserFormPage() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
-  const { user, token, signOut } = useAuth()
-  const navigate = useNavigate()
-
-  const isAuthenticated = Boolean(user && token)
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((current) => ({
@@ -161,7 +155,7 @@ export default function UserFormPage() {
     setMessage('')
 
     try {
-      await api.forms.create(form, token)
+      await api.forms.create(form)
       setStatus('success')
       setMessage('Form submitted successfully.')
       setSubmittedForm(form)
@@ -236,48 +230,11 @@ export default function UserFormPage() {
               className="h-14 w-14 rounded-2xl object-cover shadow-sm ring-1 ring-black/5"
             />
             <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
-              {isAuthenticated ? `Logged in as ${user?.role}` : 'Welcome'}
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Bridal intake form</h1>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
+                Welcome
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Bridal intake form</h1>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={signOut}
-                className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
-              >
-                Logout
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => navigate('/auth')}
-                  className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/auth')}
-                  className="rounded-full bg-[#6f2dbd] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(111,45,189,0.28)] transition hover:bg-[#5c24a0]"
-                >
-                  Register
-                </button>
-              </>
-            )}
-            {user?.role === 'admin' ? (
-              <button
-                type="button"
-                onClick={() => navigate('/admin')}
-                className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
-              >
-                Admin dashboard
-              </button>
-            ) : null}
           </div>
         </header>
 

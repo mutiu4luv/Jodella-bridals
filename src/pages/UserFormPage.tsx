@@ -241,7 +241,7 @@ export default function UserFormPage() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/login')}
               className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
             >
               Login / Register

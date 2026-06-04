@@ -1,0 +1,6 @@
+/* Tailwind handles most styling; this file keeps a few smooth defaults. */
+
+::selection {
+  background: rgba(139, 92, 246, 0.18);
+  color: #1f132d;
+}

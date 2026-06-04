@@ -97,5 +97,11 @@ export const api = {
         method: 'GET',
         token,
       }),
+    update: (id: string, body: { materialsReturned?: boolean }, token: string) =>
+      request<{ message: string; data: import('../types').FormSubmission }>(`/api/forms/${id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(body),
+      }),
   },
 }

@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
 import heroImage from '../assets/hero.png'
 import { api } from '../lib/api'
@@ -127,6 +128,7 @@ export default function UserFormPage() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
+  const navigate = useNavigate()
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((current) => ({
@@ -235,6 +237,15 @@ export default function UserFormPage() {
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Bridal intake form</h1>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
+            >
+              Login / Register
+            </button>
           </div>
         </header>
 

@@ -130,7 +130,6 @@ export default function UserFormPage() {
   const { user, token, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const apiToken = token ?? ''
   const isAuthenticated = Boolean(user && token)
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
@@ -160,7 +159,7 @@ export default function UserFormPage() {
     setMessage('')
 
     try {
-      await api.forms.create(apiToken, form)
+      await api.forms.create(form, token)
       setStatus('success')
       setMessage('Form submitted successfully.')
       setForm(initialForm)
@@ -289,12 +288,6 @@ export default function UserFormPage() {
                 Name, contact, location, wedding, and church details are captured here exactly as
                 they appear on the booking document.
               </p>
-              {!isAuthenticated ? (
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-                  Sign in or register to submit this form. The landing page stays visible for all
-                  visitors, but submission is protected.
-                </div>
-              ) : null}
             </div>
 
             <div className="mt-8 grid gap-5 md:grid-cols-2">
@@ -528,20 +521,18 @@ export default function UserFormPage() {
                       : 'text-[#1f132d]'
                 }`}
               >
-                {message || (isAuthenticated ? 'Ready to submit to MongoDB.' : 'Login required to submit.')}
+                {message || 'Ready to submit to MongoDB.'}
               </p>
             </div>
 
             <button
               type="submit"
-              disabled={status === 'submitting' || !isAuthenticated}
+              disabled={status === 'submitting'}
               className="inline-flex items-center justify-center rounded-full bg-[#6f2dbd] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(111,45,189,0.28)] transition hover:bg-[#5c24a0] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {status === 'submitting'
                 ? 'Submitting...'
-                : isAuthenticated
-                  ? 'Submit form'
-                  : 'Login to submit'}
+                : 'Submit form'}
             </button>
           </div>
         </form>

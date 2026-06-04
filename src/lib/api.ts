@@ -1,4 +1,10 @@
-const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || 'http://localhost:5000'
+const deployedApiBaseUrl =
+  import.meta.env.VITE_API_URL?.trim() || 'https://jordela-bridals-backend.vercel.app'
+const fallbackApiBaseUrl = import.meta.env.VITE_API_URL_FALLBACK?.trim() || 'http://localhost:5000'
+
+const apiBaseUrls = Array.from(
+  new Set([deployedApiBaseUrl, fallbackApiBaseUrl].filter(Boolean)),
+)
 
 type RequestOptions = Omit<RequestInit, 'headers'> & {
   token?: string | null
@@ -6,22 +12,32 @@ type RequestOptions = Omit<RequestInit, 'headers'> & {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}) {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
-      ...(options.headers || {}),
-    },
-  })
+  let lastError: Error | null = null
 
-  const payload = await response.json().catch(() => null)
+  for (const apiBaseUrl of apiBaseUrls) {
+    try {
+      const response = await fetch(`${apiBaseUrl}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+          ...(options.headers || {}),
+        },
+      })
 
-  if (!response.ok) {
-    throw new Error(payload?.message || 'Request failed.')
+      const payload = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Request failed.')
+      }
+
+      return payload as T
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Request failed.')
+    }
   }
 
-  return payload as T
+  throw lastError || new Error('Request failed.')
 }
 
 export const api = {
@@ -49,7 +65,7 @@ export const api = {
       }),
   },
   forms: {
-    create: (token: string, body: Record<string, unknown>) =>
+    create: (body: Record<string, unknown>, token?: string | null) =>
       request<{ message: string }>('/api/forms', {
         method: 'POST',
         token,

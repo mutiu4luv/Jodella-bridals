@@ -16,14 +16,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<UserFormPage />} />
       <Route path="/auth" element={<AuthPage />} />
-      <Route
-        path="/app"
-        element={
-          <ProtectedRoute roles={['user', 'admin']}>
-            <UserFormPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/app" element={<Navigate to="/" replace />} />
       <Route
         path="/admin"
         element={

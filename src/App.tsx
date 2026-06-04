@@ -15,7 +15,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<UserFormPage />} />
-      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<AuthPage />} />
       <Route path="/app" element={<Navigate to="/" replace />} />
       <Route
         path="/admin"

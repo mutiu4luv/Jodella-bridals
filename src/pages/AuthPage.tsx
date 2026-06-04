@@ -122,10 +122,10 @@ export default function AuthPage() {
             ) : null}
           </form>
 
-          <div className="mt-6 rounded-2xl border border-[#f0e6ff] bg-[#fbf8ff] p-4 text-sm leading-6 text-slate-600">
+          {/* <div className="mt-6 rounded-2xl border border-[#f0e6ff] bg-[#fbf8ff] p-4 text-sm leading-6 text-slate-600">
             Admin access is created from the backend environment values `ADMIN_EMAIL`,
             `ADMIN_PASSWORD`, and `ADMIN_NAME`.
-          </div>
+          </div> */}
         </section>
       </div>
     </main>

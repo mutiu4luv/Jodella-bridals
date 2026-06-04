@@ -6,13 +6,23 @@ const apiBaseUrls = Array.from(
   new Set([deployedApiBaseUrl, fallbackApiBaseUrl].filter(Boolean)),
 )
 
+class HttpError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
 type RequestOptions = Omit<RequestInit, 'headers'> & {
   token?: string | null
   headers?: HeadersInit
 }
 
 async function request<T>(path: string, options: RequestOptions = {}) {
-  let lastError: Error | null = null
+  let lastNetworkError: Error | null = null
 
   for (const apiBaseUrl of apiBaseUrls) {
     try {
@@ -28,16 +38,20 @@ async function request<T>(path: string, options: RequestOptions = {}) {
       const payload = await response.json().catch(() => null)
 
       if (!response.ok) {
-        throw new Error(payload?.message || 'Request failed.')
+        throw new HttpError(payload?.message || 'Request failed.', response.status)
       }
 
       return payload as T
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Request failed.')
+      if (error instanceof HttpError) {
+        throw error
+      }
+
+      lastNetworkError = error instanceof Error ? error : new Error('Request failed.')
     }
   }
 
-  throw lastError || new Error('Request failed.')
+  throw lastNetworkError || new Error('Request failed.')
 }
 
 export const api = {

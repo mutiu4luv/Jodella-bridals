@@ -10,6 +10,7 @@ export default function AuthPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
@@ -90,7 +91,13 @@ export default function AuthPage() {
               <Field label="Full name" value={name} onChange={setName} type="text" />
             ) : null}
             <Field label="Email address" value={email} onChange={setEmail} type="email" />
-            <Field label="Password" value={password} onChange={setPassword} type="password" />
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              visible={showPassword}
+              onToggle={() => setShowPassword((current) => !current)}
+            />
 
             <button
               type="submit"
@@ -146,5 +153,61 @@ function Field({
         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#8b5cf6]/10"
       />
     </label>
+  )
+}
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  visible,
+  onToggle,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  visible: boolean
+  onToggle: () => void
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
+      <div className="relative">
+        <input
+          type={visible ? 'text' : 'password'}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#8b5cf6]/10"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          className="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 transition hover:text-[#6f2dbd]"
+        >
+          {visible ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
+      </div>
+    </label>
+  )
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="m3 3 18 18" />
+      <path d="M10.6 10.6a2.8 2.8 0 1 0 2.8 2.8" />
+      <path d="M5.5 5.8C3.3 7.4 2 12 2 12s3.5 6 10 6c1.2 0 2.4-.2 3.4-.5" />
+      <path d="M14.3 4.7C18.5 5.5 22 12 22 12s-1.1 1.8-3.2 3.7" />
+    </svg>
   )
 }

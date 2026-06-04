@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logoImage from '../assets/logo.jpeg'
 import heroImage from '../assets/hero.png'
 import { useAuth } from '../context/useAuth'
 import { api } from '../lib/api'
@@ -173,11 +174,18 @@ export default function UserFormPage() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(186,132,255,0.22),_transparent_32%),linear-gradient(180deg,_#fffafc_0%,_#f5efff_55%,_#ffffff_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/70 bg-white/80 px-6 py-4 shadow-[0_24px_90px_rgba(72,27,95,0.12)] backdrop-blur-xl">
-          <div>
+          <div className="flex items-center gap-4">
+            <img
+              src={logoImage}
+              alt="Jodella Bridals logo"
+              className="h-14 w-14 rounded-2xl object-cover shadow-sm ring-1 ring-black/5"
+            />
+            <div>
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
               {isAuthenticated ? `Logged in as ${user?.role}` : 'Welcome'}
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Bridal intake form</h1>
+            </div>
           </div>
           <div className="flex flex-wrap gap-3">
             {isAuthenticated ? (

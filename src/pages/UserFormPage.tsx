@@ -128,6 +128,7 @@ export default function UserFormPage() {
   const [form, setForm] = useState<FormState>(initialForm)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+  const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
   const { user, token, signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -163,11 +164,65 @@ export default function UserFormPage() {
       await api.forms.create(form, token)
       setStatus('success')
       setMessage('Form submitted successfully.')
+      setSubmittedForm(form)
       setForm(initialForm)
     } catch (error) {
       setStatus('error')
       setMessage(error instanceof Error ? error.message : 'Submission failed.')
     }
+  }
+
+  const downloadReceipt = () => {
+    if (!submittedForm) {
+      return
+    }
+
+    const lines = [
+      'Jodella Bridal Form Confirmation',
+      `Generated: ${new Date().toLocaleString()}`,
+      '',
+      `Bride Name: ${submittedForm.brideName}`,
+      `Bride Phone: ${submittedForm.bridePhone}`,
+      `Home Address: ${submittedForm.homeAddress}`,
+      `FB/IG Address: ${submittedForm.socialAddress}`,
+      `Wedding Date: ${submittedForm.weddingDate}`,
+      `Husband/Other Relations Name: ${submittedForm.husbandName}`,
+      `Husband/Other Relations Phone: ${submittedForm.husbandPhone}`,
+      `Husband/Other Relations Address: ${submittedForm.husbandAddress}`,
+      `State/City: ${submittedForm.stateCity}`,
+      `Church Name & Address: ${submittedForm.churchAddress}`,
+      `Wedding Card Copy Type: ${submittedForm.weddingCardCopyType}`,
+      `Rental Package Chosen: ${submittedForm.packageName}`,
+      `Booking All Items: ${submittedForm.packageAllItems ? 'Yes' : 'No'}`,
+      `Package Item A: ${submittedForm.packageItemA}`,
+      `Package Item B: ${submittedForm.packageItemB}`,
+      `Package Item C: ${submittedForm.packageItemC}`,
+      `Package Item D: ${submittedForm.packageItemD}`,
+      `Package Item E: ${submittedForm.packageItemE}`,
+      `Package Item F: ${submittedForm.packageItemF}`,
+      `Removed Items / Notes: ${submittedForm.removedItems}`,
+      `Caution Fee Acknowledged: ${submittedForm.cautionFeeAcknowledged ? 'Yes' : 'No'}`,
+      `Identification Submitted: ${submittedForm.identificationSubmitted ? 'Yes' : 'No'}`,
+      `Adjustment Acknowledged: ${submittedForm.adjustmentAcknowledged ? 'Yes' : 'No'}`,
+      `Return Duration Acknowledged: ${submittedForm.returnDurationAcknowledged ? 'Yes' : 'No'}`,
+      `Pickup Acknowledged: ${submittedForm.pickupAcknowledged ? 'Yes' : 'No'}`,
+      `Fireworks Acknowledged: ${submittedForm.fireworksAcknowledged ? 'Yes' : 'No'}`,
+      `Cancellation Acknowledged: ${submittedForm.cancellationAcknowledged ? 'Yes' : 'No'}`,
+      `Damaged Item Acknowledged: ${submittedForm.damagedItemAcknowledged ? 'Yes' : 'No'}`,
+      `Value Acknowledged: ${submittedForm.valueAcknowledged ? 'Yes' : 'No'}`,
+      `Customer Signature: ${submittedForm.customerSignature}`,
+      `Consultant Signature: ${submittedForm.consultantSignature}`,
+      `M.D Signature: ${submittedForm.mdSignature}`,
+      `Signature Date: ${submittedForm.signatureDate}`,
+    ]
+
+    const file = new Blob([`${lines.join('\n')}\n`], { type: 'text/plain;charset=utf-8' })
+    const downloadUrl = URL.createObjectURL(file)
+    const anchor = document.createElement('a')
+    anchor.href = downloadUrl
+    anchor.download = `jodella-bridal-form-${submittedForm.brideName || 'submission'}.txt`
+    anchor.click()
+    URL.revokeObjectURL(downloadUrl)
   }
 
   return (
@@ -529,19 +584,34 @@ export default function UserFormPage() {
                       : 'text-[#1f132d]'
                 }`}
               >
-                {message || 'Ready to submit to MongoDB.'}
+                {message || 'Ready to submit.'}
               </p>
+              {status === 'success' && submittedForm ? (
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  A downloadable confirmation is ready with every field you submitted.
+                </p>
+              ) : null}
             </div>
 
-            <button
-              type="submit"
-              disabled={status === 'submitting'}
-              className="inline-flex items-center justify-center rounded-full bg-[#6f2dbd] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(111,45,189,0.28)] transition hover:bg-[#5c24a0] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {status === 'submitting'
-                ? 'Submitting...'
-                : 'Submit form'}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              {status === 'success' && submittedForm ? (
+                <button
+                  type="button"
+                  onClick={downloadReceipt}
+                  className="inline-flex items-center justify-center rounded-full border border-[#e3d3ff] bg-white px-6 py-3 text-sm font-semibold text-[#6f2dbd] shadow-[0_14px_30px_rgba(111,45,189,0.12)] transition hover:bg-[#faf5ff]"
+                >
+                  Download confirmation
+                </button>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={status === 'submitting'}
+                className="inline-flex items-center justify-center rounded-full bg-[#6f2dbd] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(111,45,189,0.28)] transition hover:bg-[#5c24a0] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {status === 'submitting' ? 'Submitting...' : 'Submit form'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

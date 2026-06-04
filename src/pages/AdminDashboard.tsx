@@ -4,6 +4,43 @@ import { useAuth } from '../context/useAuth'
 import { api } from '../lib/api'
 import type { FormSubmission } from '../types'
 
+const detailFields: Array<{ label: string; key: keyof FormSubmission }> = [
+  { label: 'Bride name', key: 'brideName' },
+  { label: 'Bride phone', key: 'bridePhone' },
+  { label: 'Home address', key: 'homeAddress' },
+  { label: 'FB/IG address', key: 'socialAddress' },
+  { label: 'Wedding date', key: 'weddingDate' },
+  { label: "Husband/Other relations name", key: 'husbandName' },
+  { label: 'Husband/Other relations phone', key: 'husbandPhone' },
+  { label: 'Husband/Other relations address', key: 'husbandAddress' },
+  { label: 'State / City', key: 'stateCity' },
+  { label: 'Church name & address', key: 'churchAddress' },
+  { label: 'Wedding card copy type', key: 'weddingCardCopyType' },
+  { label: 'Rental package chosen', key: 'packageName' },
+  { label: 'Booking all items', key: 'packageAllItems' },
+  { label: 'Package item A', key: 'packageItemA' },
+  { label: 'Package item B', key: 'packageItemB' },
+  { label: 'Package item C', key: 'packageItemC' },
+  { label: 'Package item D', key: 'packageItemD' },
+  { label: 'Package item E', key: 'packageItemE' },
+  { label: 'Package item F', key: 'packageItemF' },
+  { label: 'Removed items / notes', key: 'removedItems' },
+  { label: 'Caution fee acknowledged', key: 'cautionFeeAcknowledged' },
+  { label: 'Identification submitted', key: 'identificationSubmitted' },
+  { label: 'Adjustment acknowledged', key: 'adjustmentAcknowledged' },
+  { label: 'Return duration acknowledged', key: 'returnDurationAcknowledged' },
+  { label: 'Pickup acknowledged', key: 'pickupAcknowledged' },
+  { label: 'Fireworks acknowledged', key: 'fireworksAcknowledged' },
+  { label: 'Cancellation acknowledged', key: 'cancellationAcknowledged' },
+  { label: 'Damaged item acknowledged', key: 'damagedItemAcknowledged' },
+  { label: 'Value acknowledged', key: 'valueAcknowledged' },
+  { label: 'Customer signature', key: 'customerSignature' },
+  { label: 'Consultant signature', key: 'consultantSignature' },
+  { label: 'M.D signature', key: 'mdSignature' },
+  { label: 'Signature date', key: 'signatureDate' },
+  { label: 'Submitted at', key: 'createdAt' },
+]
+
 export default function AdminDashboard() {
   const { user, token, signOut } = useAuth()
   const navigate = useNavigate()
@@ -181,28 +218,31 @@ export default function AdminDashboard() {
 
             {selectedSubmission ? (
               <div className="mt-6 space-y-4">
-                <DetailCard label="Bride phone" value={selectedSubmission.bridePhone} />
-                <DetailCard label="Wedding date" value={selectedSubmission.weddingDate} />
                 <DetailCard
                   label="Submitted by"
                   value={
                     selectedSubmission.submittedBy?.name
                       ? `${selectedSubmission.submittedBy.name} (${selectedSubmission.submittedBy.email})`
-                      : 'Unknown user'
+                      : 'Public submission'
                   }
                 />
-                <DetailCard label="Home address" value={selectedSubmission.homeAddress || '—'} />
-                <DetailCard label="Church" value={selectedSubmission.churchAddress || '—'} />
-                <DetailCard label="Package" value={selectedSubmission.packageName || '—'} />
-                <DetailCard
-                  label="Package type"
-                  value={selectedSubmission.weddingCardCopyType || '—'}
-                />
-                <DetailCard
-                  label="Notes"
-                  value={selectedSubmission.removedItems || 'No extra notes.'}
-                  multiline
-                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {detailFields.map((field) => (
+                    <DetailCard
+                      key={field.key}
+                      label={field.label}
+                      value={formatFieldValue(selectedSubmission[field.key], field.key)}
+                      multiline={
+                        field.key === 'removedItems' ||
+                        field.key === 'homeAddress' ||
+                        field.key === 'churchAddress' ||
+                        field.key === 'husbandAddress' ||
+                        field.key === 'socialAddress' ||
+                        field.key === 'consultantSignature'
+                      }
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-[#d8c1ff] bg-[#fcf9ff] p-6 text-sm leading-6 text-slate-600">
@@ -214,6 +254,22 @@ export default function AdminDashboard() {
       </div>
     </main>
   )
+}
+
+function formatFieldValue(value: unknown, key: keyof FormSubmission) {
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No'
+  }
+
+  if (!value) {
+    return '—'
+  }
+
+  if (key === 'createdAt') {
+    return new Date(String(value)).toLocaleString()
+  }
+
+  return String(value)
 }
 
 function DetailCard({

@@ -235,7 +235,7 @@ export default function UserFormPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
                 Welcome
               </p>
-              <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Bridal intake form</h1>
+              <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Jodella Luxury Bridal </h1>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -253,13 +253,13 @@ export default function UserFormPage() {
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(161,105,255,0.08),transparent_35%,rgba(255,255,255,0.65))]" />
           <div className="relative grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-3 rounded-full border border-[#e8d9ff] bg-[#f8f2ff] px-4 py-2 text-sm font-semibold text-[#6f2dbd]">
+              {/* <div className="inline-flex items-center gap-3 rounded-full border border-[#e8d9ff] bg-[#f8f2ff] px-4 py-2 text-sm font-semibold text-[#6f2dbd]">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#a855f7]" />
                 Jodella Bridal Booking Form
-              </div>
+              </div> */}
               <div className="space-y-4">
                 <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-[#1f132d] sm:text-5xl">
-                  Know Your Customer form for bridal rentals and wedding support.
+                  Jodella Bridal Rental Policy Form
                 </h2>
                 <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
                   Complete the bride profile, package selection, and policy acknowledgements. Your

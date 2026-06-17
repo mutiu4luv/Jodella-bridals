@@ -261,13 +261,18 @@ export default function UserFormPage() {
                 <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-[#1f132d] sm:text-5xl">
                   Jodella Bridal Rental Policy Form
                 </h2>
-                <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                  Complete the bride profile, package selection, and policy acknowledgements. Your
-                  submission is saved for the admin dashboard.
-                </p>
+                <div className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                 <h3>Dear Bride To Be,</h3>
+                 <p>Thank you for choosing us to be part of your Beautiful love story, we are most honored to help create this memory with you.</p>
+                 <p>To ensure a seamless Rental experience, please take a few moment to carefully read and complete our rental policy form and acknowledge your understanding.</p>
+<p>As the information provided will help us serve you better, and also ensure that we both understand the Terms and conditions of our Rentals.</p>
+               <p>We look forward to being a part of your forever in love story.</p>
+               <p>The jodella bridal team</p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              </div>
+
+              {/* <div className="grid gap-4 sm:grid-cols-3">
                 {[
                   ['Refundable caution fee', 'N20,000'],
                   ['Late return fine', 'N5,000/day'],
@@ -281,7 +286,7 @@ export default function UserFormPage() {
                     <p className="mt-2 text-lg font-semibold text-[#1f132d]">{value}</p>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             <div className="relative overflow-hidden rounded-[1.75rem] border border-[#eadcff] bg-gradient-to-br from-[#231433] via-[#4f2077] to-[#8d4dff] p-6 text-white shadow-[0_20px_60px_rgba(79,32,119,0.3)]">

@@ -20,8 +20,8 @@ type FormState = {
   husbandAddress: string
   stateCity: string
   churchAddress: string
-  weddingCardCopyType: string
   packageName: string
+  packageImageUrl: string
   packageAllItems: boolean
   packageItemA: string
   packageItemB: string
@@ -40,6 +40,8 @@ type FormState = {
   damagedItemAcknowledged: boolean
   valueAcknowledged: boolean
   policyAcknowledged: boolean
+  idCardUrl: string
+  idCardName: string
   customerSignature: string
   consultantSignature: string
   mdSignature: string
@@ -57,8 +59,8 @@ const initialForm: FormState = {
   husbandAddress: '',
   stateCity: '',
   churchAddress: '',
-  weddingCardCopyType: 'softcopy',
   packageName: '',
+  packageImageUrl: '',
   packageAllItems: true,
   packageItemA: '',
   packageItemB: '',
@@ -77,6 +79,8 @@ const initialForm: FormState = {
   damagedItemAcknowledged: false,
   valueAcknowledged: false,
   policyAcknowledged: false,
+  idCardUrl: '',
+  idCardName: '',
   customerSignature: '',
   consultantSignature: '',
   mdSignature: '',
@@ -132,6 +136,14 @@ const policyItems = [
 
 const galleryImages = [firstImage, secondImage, thirdImage, fourthImage, fifthImage, sixthImage]
 
+const packageOptions = [
+  { name: 'Package 1', image: secondImage },
+  { name: 'Package 2', image: thirdImage },
+  { name: 'Package 3', image: fourthImage },
+  { name: 'Package 4', image: fifthImage },
+  { name: 'Package 5', image: sixthImage },
+]
+
 function shuffleQueue(items: string[]) {
   const queue = [...items]
 
@@ -145,15 +157,38 @@ function shuffleQueue(items: string[]) {
   return queue
 }
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      const result = reader.result
+
+      if (typeof result !== 'string') {
+        reject(new Error('Unable to read ID card file.'))
+        return
+      }
+
+      resolve(result)
+    }
+
+    reader.onerror = () => reject(new Error('Unable to read ID card file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function UserFormPage() {
   const [form, setForm] = useState<FormState>(initialForm)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
+  const [idCardStatus, setIdCardStatus] = useState<'idle' | 'uploading' | 'error' | 'ready'>('idle')
+  const [idCardMessage, setIdCardMessage] = useState('')
   const [heroImage, setHeroImage] = useState(() => galleryImages[0])
   const [heroImageVisible, setHeroImageVisible] = useState(true)
   const heroQueueRef = useRef<string[]>(shuffleQueue(galleryImages.slice(1)))
   const navigate = useNavigate()
+  const selectedPackage = packageOptions.find((item) => item.name === form.packageName) ?? null
 
   useEffect(() => {
     heroQueueRef.current = shuffleQueue(galleryImages.slice(1))
@@ -197,6 +232,39 @@ export default function UserFormPage() {
     updateField(field, event.target.value as FormState[typeof field])
   }
 
+  const handleIdCardUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      updateField('idCardUrl', '')
+      updateField('idCardName', '')
+      setIdCardStatus('idle')
+      setIdCardMessage('')
+      return
+    }
+
+    setIdCardStatus('uploading')
+    setIdCardMessage('Uploading ID card...')
+
+    try {
+      const dataUrl = await fileToDataUrl(file)
+      const uploaded = await api.uploads.idCard({
+        dataUrl,
+        fileName: file.name,
+        mimeType: file.type,
+      })
+      updateField('idCardUrl', uploaded.data.idCardUrl)
+      updateField('idCardName', uploaded.data.idCardName)
+      setIdCardStatus('ready')
+      setIdCardMessage('ID card uploaded successfully.')
+    } catch (error) {
+      updateField('idCardUrl', '')
+      updateField('idCardName', '')
+      setIdCardStatus('error')
+      setIdCardMessage(error instanceof Error ? error.message : 'Unable to upload ID card.')
+    }
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setStatus('submitting')
@@ -207,11 +275,21 @@ export default function UserFormPage() {
         throw new Error('Please check the acknowledgement box before submitting.')
       }
 
+      if (!form.packageName) {
+        throw new Error('Please choose a package before submitting.')
+      }
+
+      if (!form.idCardUrl) {
+        throw new Error('Please upload a valid ID card before submitting.')
+      }
+
       await api.forms.create(form)
       setStatus('success')
       setMessage('Form submitted successfully.')
       setSubmittedForm(form)
       setForm(initialForm)
+      setIdCardStatus('idle')
+      setIdCardMessage('')
     } catch (error) {
       setStatus('error')
       setMessage(error instanceof Error ? error.message : 'Submission failed.')
@@ -237,8 +315,8 @@ export default function UserFormPage() {
       `Husband/Other Relations Address: ${submittedForm.husbandAddress}`,
       `State/City: ${submittedForm.stateCity}`,
       `Church Name & Address: ${submittedForm.churchAddress}`,
-      `Wedding Card Copy Type: ${submittedForm.weddingCardCopyType}`,
       `Rental Package Chosen: ${submittedForm.packageName}`,
+      `Package Image: ${submittedForm.packageImageUrl}`,
       `Booking All Items: ${submittedForm.packageAllItems ? 'Yes' : 'No'}`,
       `Package Item A: ${submittedForm.packageItemA}`,
       `Package Item B: ${submittedForm.packageItemB}`,
@@ -257,6 +335,8 @@ export default function UserFormPage() {
       `Damaged Item Acknowledged: ${submittedForm.damagedItemAcknowledged ? 'Yes' : 'No'}`,
       `Value Acknowledged: ${submittedForm.valueAcknowledged ? 'Yes' : 'No'}`,
       `Policy Acknowledged: ${submittedForm.policyAcknowledged ? 'Yes' : 'No'}`,
+      `Valid ID Card: ${submittedForm.idCardName}`,
+      `ID Card URL: ${submittedForm.idCardUrl}`,
       `Customer Signature: ${submittedForm.customerSignature}`,
       `Consultant Signature: ${submittedForm.consultantSignature}`,
       `M.D Signature: ${submittedForm.mdSignature}`,
@@ -333,15 +413,17 @@ export default function UserFormPage() {
                 <div className="absolute -right-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
                 <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-white/15 blur-3xl" />
                 <div className="relative overflow-hidden rounded-[1.4rem] border border-white/15 bg-black/15">
-                  <img
-                    src={heroImage}
-                    alt="Bridal showcase"
-                    className={`h-[280px] w-full select-none object-contain bg-[#f5d77a]/20 p-3 transition-opacity duration-500 sm:h-[360px] lg:h-[420px] ${
-                      heroImageVisible ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    draggable={false}
-                    onContextMenu={(event) => event.preventDefault()}
-                  />
+                  <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#f5d77a]/20 p-3 sm:aspect-[16/10] lg:aspect-[4/3]">
+                    <img
+                      src={heroImage}
+                      alt="Bridal showcase"
+                      className={`block h-full w-full select-none object-contain object-center transition-opacity duration-500 ${
+                        heroImageVisible ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      draggable={false}
+                      onContextMenu={(event) => event.preventDefault()}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -456,68 +538,190 @@ export default function UserFormPage() {
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Package and approvals</h3>
               </div>
 
-              <div className="mt-6 grid gap-5 md:grid-cols-2">
-                <SelectField
-                  label="Wedding card copy type"
-                  name="weddingCardCopyType"
-                  value={form.weddingCardCopyType}
-                  onChange={handleChange}
-                  options={[
-                    ['hardcopy', 'Hardcopy'],
-                    ['softcopy', 'Softcopy'],
-                    ['both', 'Both'],
-                  ]}
-                />
+              <div className="mt-6 space-y-6">
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-semibold text-[#27163b]">Choose a package</h4>
+                    <p className="text-sm text-slate-500">
+                      Tap one package image so the client can see the exact option.
+                    </p>
+                  </div>
 
-                <Field
-                  label="Rental package chosen"
-                  name="packageName"
-                  value={form.packageName}
-                  onChange={handleChange}
-                />
-              </div>
+                  {selectedPackage ? (
+                    <div className="mt-4 rounded-[1.75rem] border border-[#b58715]/30 bg-[#fff9e8] p-4 shadow-[0_18px_40px_rgba(181,135,21,0.12)]">
+                      <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b58715]">
+                            Selected package preview
+                          </p>
+                          <h5 className="mt-1 text-xl font-semibold text-[#1f132d]">
+                            {selectedPackage.name}
+                          </h5>
+                        </div>
+                        <p className="text-sm font-medium text-[#8f6510]">
+                          Larger view for easier reading
+                        </p>
+                      </div>
 
-              <div className="mt-6 rounded-2xl border border-dashed border-[#d8c1ff] bg-[#fcf9ff] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h4 className="font-semibold text-[#27163b]">Package notes</h4>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                      <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-[#f3e0a8] bg-white">
+                        <div className="flex max-h-[68vh] min-h-[280px] items-center justify-center bg-[#fffdf3] p-4">
+                          <img
+                            src={selectedPackage.image}
+                            alt={selectedPackage.name}
+                            className="block max-h-[68vh] w-full object-contain object-center"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-[1.75rem] border border-dashed border-[#d8c1ff] bg-[#fcf9ff] p-4 text-sm leading-6 text-slate-600">
+                      Select a package below to preview it in a larger, easier-to-read view.
+                    </div>
+                  )}
+
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {packageOptions.map((item) => {
+                      const isActive = form.packageName === item.name
+
+                      return (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => {
+                            updateField('packageName', item.name)
+                            updateField('packageImageUrl', item.image)
+                          }}
+                          className={`overflow-hidden rounded-[1.5rem] border text-left transition ${
+                            isActive
+                              ? 'border-[#b58715] bg-[#fff4cf] ring-4 ring-[#f0c94d]/35 shadow-[0_22px_50px_rgba(181,135,21,0.26)] scale-[1.01]'
+                              : 'border-[#f3e0a8] bg-[#fffaf0] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(181,135,21,0.10)]'
+                          }`}
+                        >
+                          <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#fffdf3] p-3">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="block h-full w-full object-contain object-center"
+                            />
+                          </div>
+                          <div className="space-y-1 p-4">
+                            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#b58715]">
+                              {item.name}
+                            </p>
+                            <p className="text-base font-medium text-[#8f6510]">
+                              {isActive ? 'Selected package preview' : 'Select this package image'}
+                            </p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {form.packageName ? (
+                    <p className="mt-3 text-base font-semibold text-[#8f6510]">
+                      Selected package: {form.packageName}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="rounded-2xl border border-dashed border-[#d8c1ff] bg-[#fcf9ff] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-semibold text-[#27163b]">Booking all listed items</h4>
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                      <input
+                        type="checkbox"
+                        name="packageAllItems"
+                        checked={form.packageAllItems}
+                        onChange={handleChange}
+                        className="h-4 w-4 rounded border-slate-300 text-[#b58715] focus:ring-[#b58715]"
+                      />
+                      Booking all listed items
+                    </label>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    If any item is removed from the package, write it clearly below.
+                  </p>
+
+                  {!form.packageAllItems ? (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {[
+                        ['a', 'packageItemA'],
+                        ['b', 'packageItemB'],
+                        ['c', 'packageItemC'],
+                        ['d', 'packageItemD'],
+                        ['e', 'packageItemE'],
+                        ['f', 'packageItemF'],
+                      ].map(([label, name]) => (
+                        <Field
+                          key={name}
+                          label={label}
+                          name={name as keyof FormState}
+                          value={form[name as keyof FormState] as string}
+                          onChange={handleChange}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-slate-600">
+                      All listed items are selected. Uncheck this box if any package item is removed.
+                    </div>
+                  )}
+
+                  <TextAreaField
+                    label="Items removed or special package notes"
+                    name="removedItems"
+                    value={form.removedItems}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-[#f3e0a8] bg-[#fffaf0] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-semibold text-[#27163b]">Submit a valid ID card</h4>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        Upload a clear image of a valid ID card. The file is saved to Cloudinary.
+                      </p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p
+                        className={`font-medium ${
+                          idCardStatus === 'error'
+                            ? 'text-rose-600'
+                            : idCardStatus === 'uploading'
+                              ? 'text-amber-600'
+                              : 'text-emerald-600'
+                        }`}
+                      >
+                        {idCardMessage || 'Awaiting upload.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="mt-4 block">
+                    <span className="mb-2 block text-sm font-medium text-slate-700">Choose file</span>
                     <input
-                      type="checkbox"
-                      name="packageAllItems"
-                      checked={form.packageAllItems}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-slate-300 text-[#b58715] focus:ring-[#b58715]"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleIdCardUpload}
+                      className="block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-[#fff1b8] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#8f6510] hover:file:bg-[#ffe88a]"
                     />
-                    Booking all listed items
                   </label>
+
+                  {form.idCardUrl ? (
+                    <div className="mt-4 rounded-2xl border border-emerald-200 bg-white p-4">
+                      <p className="text-sm font-semibold text-[#27163b]">Uploaded file</p>
+                      <p className="mt-1 text-sm text-slate-600">{form.idCardName}</p>
+                      <a
+                        href={form.idCardUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex text-sm font-semibold text-[#b58715] underline decoration-[#b58715]/40 underline-offset-4"
+                      >
+                        View uploaded ID card
+                      </a>
+                    </div>
+                  ) : null}
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  If any item is removed from the package, write it clearly below.
-                </p>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {[
-                    ['a', 'packageItemA'],
-                    ['b', 'packageItemB'],
-                    ['c', 'packageItemC'],
-                    ['d', 'packageItemD'],
-                    ['e', 'packageItemE'],
-                    ['f', 'packageItemF'],
-                  ].map(([label, name]) => (
-                    <Field
-                      key={name}
-                      label={label}
-                      name={name as keyof FormState}
-                      value={form[name as keyof FormState] as string}
-                      onChange={handleChange}
-                    />
-                  ))}
-                </div>
-                <TextAreaField
-                  label="Items removed or special package notes"
-                  name="removedItems"
-                  value={form.removedItems}
-                  onChange={handleChange}
-                />
               </div>
 
               <div className="mt-6 space-y-3">
@@ -642,34 +846,6 @@ function Field({ label, name, value, onChange, type = 'text', full }: FieldProps
         onChange={onChange}
         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
       />
-    </label>
-  )
-}
-
-type SelectFieldProps = {
-  label: string
-  name: keyof FormState
-  value: string
-  onChange: ChangeEventHandler<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>
-  options: Array<[string, string]>
-}
-
-function SelectField({ label, name, value, onChange, options }: SelectFieldProps) {
-  return (
-    <label>
-      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
-      <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
-      >
-        {options.map(([optionValue, optionLabel]) => (
-          <option key={optionValue} value={optionValue}>
-            {optionLabel}
-          </option>
-        ))}
-      </select>
     </label>
   )
 }

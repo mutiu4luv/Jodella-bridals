@@ -35,8 +35,8 @@ const detailFields: Array<{ label: string; key: keyof FormSubmission }> = [
   { label: 'Husband/Other relations address', key: 'husbandAddress' },
   { label: 'State / City', key: 'stateCity' },
   { label: 'Church name & address', key: 'churchAddress' },
-  { label: 'Wedding card copy type', key: 'weddingCardCopyType' },
   { label: 'Rental package chosen', key: 'packageName' },
+  { label: 'Package image', key: 'packageImageUrl' },
   { label: 'Booking all items', key: 'packageAllItems' },
   { label: 'Package item A', key: 'packageItemA' },
   { label: 'Package item B', key: 'packageItemB' },
@@ -55,6 +55,8 @@ const detailFields: Array<{ label: string; key: keyof FormSubmission }> = [
   { label: 'Damaged item acknowledged', key: 'damagedItemAcknowledged' },
   { label: 'Value acknowledged', key: 'valueAcknowledged' },
   { label: 'Policy acknowledged', key: 'policyAcknowledged' },
+  { label: 'ID card name', key: 'idCardName' },
+  { label: 'ID card URL', key: 'idCardUrl' },
   { label: 'Materials returned', key: 'materialsReturned' },
   { label: 'Customer signature', key: 'customerSignature' },
   { label: 'Consultant signature', key: 'consultantSignature' },
@@ -688,22 +690,51 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ) : selectedSubmission ? (
-                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                        {detailFields.map((field) => (
-                          <DetailCard
-                            key={field.key}
-                            label={field.label}
-                            value={formatFieldValue(selectedSubmission[field.key], field.key)}
-                            multiline={
-                              field.key === 'removedItems' ||
-                              field.key === 'homeAddress' ||
-                              field.key === 'churchAddress' ||
-                              field.key === 'husbandAddress' ||
-                              field.key === 'socialAddress' ||
-                              field.key === 'consultantSignature'
-                            }
-                          />
-                        ))}
+                      <div className="mt-6 space-y-5">
+                        {selectedSubmission.packageImageUrl ? (
+                          <section className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                                  Chosen package
+                                </p>
+                                <h4 className="mt-1 text-xl font-semibold text-[#10261a]">
+                                  {selectedSubmission.packageName}
+                                </h4>
+                              </div>
+                              <p className="text-sm font-medium text-slate-500">
+                                Full image preview
+                              </p>
+                            </div>
+                            <div className="mt-4 overflow-hidden rounded-[20px] border border-emerald-100 bg-white shadow-sm">
+                              <div className="flex aspect-[16/9] items-center justify-center bg-[#f7fbf7] p-3">
+                                <img
+                                  src={selectedSubmission.packageImageUrl}
+                                  alt={selectedSubmission.packageName}
+                                  className="block h-full w-full object-contain object-center"
+                                />
+                              </div>
+                            </div>
+                          </section>
+                        ) : null}
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {detailFields.map((field) => (
+                            <DetailCard
+                              key={field.key}
+                              label={field.label}
+                              value={formatFieldValue(selectedSubmission[field.key], field.key)}
+                              multiline={
+                                field.key === 'removedItems' ||
+                                field.key === 'homeAddress' ||
+                                field.key === 'churchAddress' ||
+                                field.key === 'husbandAddress' ||
+                                field.key === 'socialAddress' ||
+                                field.key === 'consultantSignature'
+                              }
+                            />
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="mt-6 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50 p-6 text-sm leading-6 text-slate-600">
@@ -861,22 +892,49 @@ function SubmissionPreviewModal({
         </div>
 
         <div className="max-h-[calc(92vh-96px)] overflow-auto px-6 py-6">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {detailFields.map((field) => (
-              <DetailCard
-                key={field.key}
-                label={field.label}
-                value={formatFieldValue(submission[field.key], field.key)}
-                multiline={
-                  field.key === 'removedItems' ||
-                  field.key === 'homeAddress' ||
-                  field.key === 'churchAddress' ||
-                  field.key === 'husbandAddress' ||
-                  field.key === 'socialAddress' ||
-                  field.key === 'consultantSignature'
-                }
-              />
-            ))}
+          <div className="space-y-5">
+            {submission.packageImageUrl ? (
+              <section className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                      Chosen package
+                    </p>
+                    <h4 className="mt-1 text-xl font-semibold text-[#10261a]">
+                      {submission.packageName}
+                    </h4>
+                  </div>
+                  <p className="text-sm font-medium text-slate-500">Full image preview</p>
+                </div>
+                <div className="mt-4 overflow-hidden rounded-[20px] border border-emerald-100 bg-white shadow-sm">
+                  <div className="flex aspect-[16/9] items-center justify-center bg-[#f7fbf7] p-3">
+                    <img
+                      src={submission.packageImageUrl}
+                      alt={submission.packageName}
+                      className="block h-full w-full object-contain object-center"
+                    />
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {detailFields.map((field) => (
+                <DetailCard
+                  key={field.key}
+                  label={field.label}
+                  value={formatFieldValue(submission[field.key], field.key)}
+                  multiline={
+                    field.key === 'removedItems' ||
+                    field.key === 'homeAddress' ||
+                    field.key === 'churchAddress' ||
+                    field.key === 'husbandAddress' ||
+                    field.key === 'socialAddress' ||
+                    field.key === 'consultantSignature'
+                  }
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

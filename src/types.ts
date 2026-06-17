@@ -24,8 +24,8 @@ export type FormSubmission = {
   husbandAddress: string
   stateCity: string
   churchAddress: string
-  weddingCardCopyType: string
   packageName: string
+  packageImageUrl: string
   packageAllItems: boolean
   packageItemA: string
   packageItemB: string
@@ -44,6 +44,8 @@ export type FormSubmission = {
   damagedItemAcknowledged: boolean
   valueAcknowledged: boolean
   policyAcknowledged: boolean
+  idCardUrl: string
+  idCardName: string
   materialsReturned: boolean
   customerSignature: string
   consultantSignature: string

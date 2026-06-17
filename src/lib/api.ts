@@ -59,6 +59,16 @@ async function request<T>(path: string, options: RequestOptions = {}) {
 }
 
 export const api = {
+  uploads: {
+    idCard: (body: { dataUrl: string; fileName: string; mimeType: string }) =>
+      request<{
+        message: string
+        data: { idCardUrl: string; idCardName: string; originalFilename: string }
+      }>('/api/uploads/id-card', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+  },
   auth: {
     register: (body: { name: string; email: string; password: string }) =>
       request<{ message: string; token: string; user: import('../types').SessionUser }>(

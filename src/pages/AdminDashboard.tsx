@@ -54,6 +54,7 @@ const detailFields: Array<{ label: string; key: keyof FormSubmission }> = [
   { label: 'Cancellation acknowledged', key: 'cancellationAcknowledged' },
   { label: 'Damaged item acknowledged', key: 'damagedItemAcknowledged' },
   { label: 'Value acknowledged', key: 'valueAcknowledged' },
+  { label: 'Policy acknowledged', key: 'policyAcknowledged' },
   { label: 'Materials returned', key: 'materialsReturned' },
   { label: 'Customer signature', key: 'customerSignature' },
   { label: 'Consultant signature', key: 'consultantSignature' },

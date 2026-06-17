@@ -1,7 +1,12 @@
-import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
-import heroImage from '../assets/hero.png'
+import firstImage from '../assets/first.jpeg'
+import secondImage from '../assets/second.jpeg'
+import thirdImage from '../assets/third.jpeg'
+import fourthImage from '../assets/fourth.jpeg'
+import fifthImage from '../assets/fifth.jpeg'
+import sixthImage from '../assets/sixth.jpeg'
 import { api } from '../lib/api'
 
 type FormState = {
@@ -34,6 +39,7 @@ type FormState = {
   cancellationAcknowledged: boolean
   damagedItemAcknowledged: boolean
   valueAcknowledged: boolean
+  policyAcknowledged: boolean
   customerSignature: string
   consultantSignature: string
   mdSignature: string
@@ -70,6 +76,7 @@ const initialForm: FormState = {
   cancellationAcknowledged: false,
   damagedItemAcknowledged: false,
   valueAcknowledged: false,
+  policyAcknowledged: false,
   customerSignature: '',
   consultantSignature: '',
   mdSignature: '',
@@ -91,7 +98,7 @@ const policyItems = [
   },
   {
     title: 'Damages',
-    body: 'Loss attracts full replacement cost, tears on gowns void caution refund, and serious stains attract a 50% deduction from the caution fee.',
+    body: 'Damages include:\n• Loss of any item attracts full payment of the worth of the item as at current market price at the time of damage.\n• Tear on the wedding gowns, no caution fee is refunded.\n• Serious mud stains, oil stains, wine stains or other form of serious stains 50% of the caution fee is deducted.',
   },
   {
     title: 'Identification',
@@ -106,16 +113,16 @@ const policyItems = [
     body: 'All rented items must be returned within 2 days after the event. Late return attracts a daily fine of N5,000.',
   },
   {
-    title: 'Pickup and delivery',
-    body: 'Owerri brides pick up from 12 noon on Fridays. Brides from other listed cities pick up or waybill two days before the wedding day. Transportation is borne by the bride both ways.',
+    title: 'Pickup / delivery of rented items',
+    body: '• All items are ready for pick-up from 12 noon on Fridays (i.e a day to the wedding day) this is for brides within Owerri and environs.\n• Brides should confirm all items supplied before leaving the show room and afterwards sign off our confirmation form on pickup day as attached behind this policy document.\n• Brides from Orlu, Okigwe, Aba, Umuahia, Anambra, Enugu, Port Harcourt and other states, pick-up/waybill is two days before wedding day.\n• Outside Nigeria delivery is as discussed with the bride.\n• For waybill or delivery both within and outside Owerri, Bride bears the cost of transportation of items both to and fro.\n• Full payments of all items are to be made before pickup or delivery.',
   },
   {
     title: 'Fireworks',
     body: 'Fireworks near the bride are not allowed because they can burn the gown and attract full purchase cost at current market value.',
   },
   {
-    title: 'Cancellation or date change',
-    body: 'This business operates a no-refund policy after payment. Cancellation or date changes must be communicated at least two weeks before the booked date.',
+    title: 'Cancellation of wedding or change of date',
+    body: 'This business operates on a NO REFUND POLICY AFTER PAYMENT.\n\nTherefore if for any reason events are cancelled or the wedding date changed, the following applies:\n• Bride: to notify us at least two weeks before the already booked date.\n• No return of items taken out of store.\n• No refund of money already deposited, but the contract will be left open for future purposes.\n• If bride insist on refund a 30% administrative charges will be deducted from total amount deposited and the balance refunded.',
   },
   {
     title: 'Damaged items and value',
@@ -123,12 +130,51 @@ const policyItems = [
   },
 ]
 
+const galleryImages = [firstImage, secondImage, thirdImage, fourthImage, fifthImage, sixthImage]
+
+function shuffleQueue(items: string[]) {
+  const queue = [...items]
+
+  for (let index = queue.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    const temporary = queue[index]
+    queue[index] = queue[swapIndex]
+    queue[swapIndex] = temporary
+  }
+
+  return queue
+}
+
 export default function UserFormPage() {
   const [form, setForm] = useState<FormState>(initialForm)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
+  const [heroImage, setHeroImage] = useState(() => galleryImages[0])
+  const [heroImageVisible, setHeroImageVisible] = useState(true)
+  const heroQueueRef = useRef<string[]>(shuffleQueue(galleryImages.slice(1)))
   const navigate = useNavigate()
+
+  useEffect(() => {
+    heroQueueRef.current = shuffleQueue(galleryImages.slice(1))
+
+    const intervalId = window.setInterval(() => {
+      if (heroQueueRef.current.length === 0) {
+        heroQueueRef.current = shuffleQueue(galleryImages.slice(1))
+      }
+
+      const nextImage = heroQueueRef.current.shift()
+      if (nextImage) {
+        setHeroImageVisible(false)
+        window.setTimeout(() => {
+          setHeroImage(nextImage)
+          setHeroImageVisible(true)
+        }, 240)
+      }
+    }, 4000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((current) => ({
@@ -157,6 +203,10 @@ export default function UserFormPage() {
     setMessage('')
 
     try {
+      if (!form.policyAcknowledged) {
+        throw new Error('Please check the acknowledgement box before submitting.')
+      }
+
       await api.forms.create(form)
       setStatus('success')
       setMessage('Form submitted successfully.')
@@ -206,6 +256,7 @@ export default function UserFormPage() {
       `Cancellation Acknowledged: ${submittedForm.cancellationAcknowledged ? 'Yes' : 'No'}`,
       `Damaged Item Acknowledged: ${submittedForm.damagedItemAcknowledged ? 'Yes' : 'No'}`,
       `Value Acknowledged: ${submittedForm.valueAcknowledged ? 'Yes' : 'No'}`,
+      `Policy Acknowledged: ${submittedForm.policyAcknowledged ? 'Yes' : 'No'}`,
       `Customer Signature: ${submittedForm.customerSignature}`,
       `Consultant Signature: ${submittedForm.consultantSignature}`,
       `M.D Signature: ${submittedForm.mdSignature}`,
@@ -232,7 +283,7 @@ export default function UserFormPage() {
               className="h-14 w-14 rounded-2xl object-cover shadow-sm ring-1 ring-black/5"
             />
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
                 Welcome
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-[#1f132d]">Jodella Luxury Bridal </h1>
@@ -242,7 +293,7 @@ export default function UserFormPage() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="rounded-full border border-[#e3d3ff] bg-white px-5 py-3 text-sm font-semibold text-[#6f2dbd] transition hover:bg-[#faf5ff]"
+              className="rounded-full border border-[#d7b35a] bg-white px-5 py-3 text-sm font-semibold text-[#8f6510] transition hover:bg-[#fff8e5]"
             >
               Login 
             </button>
@@ -252,59 +303,45 @@ export default function UserFormPage() {
         <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 shadow-[0_24px_90px_rgba(72,27,95,0.12)] backdrop-blur-xl">
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(161,105,255,0.08),transparent_35%,rgba(255,255,255,0.65))]" />
           <div className="relative grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
-            <div className="space-y-6">
-              {/* <div className="inline-flex items-center gap-3 rounded-full border border-[#e8d9ff] bg-[#f8f2ff] px-4 py-2 text-sm font-semibold text-[#6f2dbd]">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#a855f7]" />
-                Jodella Bridal Booking Form
-              </div> */}
+            <div className="order-2 space-y-6 lg:order-1">
               <div className="space-y-4">
                 <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-[#1f132d] sm:text-5xl">
                   Jodella Bridal Rental Policy Form
                 </h2>
                 <div className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                 <h3>Dear Bride To Be,</h3>
-                 <p>Thank you for choosing us to be part of your Beautiful love story, we are most honored to help create this memory with you.</p>
-                 <p>To ensure a seamless Rental experience, please take a few moment to carefully read and complete our rental policy form and acknowledge your understanding.</p>
-<p>As the information provided will help us serve you better, and also ensure that we both understand the Terms and conditions of our Rentals.</p>
-               <p>We look forward to being a part of your forever in love story.</p>
-               <p>The jodella bridal team</p>
+                  <h3>Dear Bride To Be,</h3>
+                  <p>
+                    Thank you for choosing us to be part of your Beautiful love story, we are most
+                    honored to help create this memory with you.
+                  </p>
+                  <p>
+                    To ensure a seamless Rental experience, please take a few moment to carefully
+                    read and complete our rental policy form and acknowledge your understanding.
+                  </p>
+                  <p>
+                    As the information provided will help us serve you better, and also ensure that
+                    we both understand the Terms and conditions of our Rentals.
+                  </p>
+                  <p>We look forward to being a part of your forever in love story.</p>
+                  <p>The jodella bridal team</p>
+                </div>
               </div>
-
-              </div>
-
-              {/* <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  ['Refundable caution fee', 'N20,000'],
-                  ['Late return fine', 'N5,000/day'],
-                  ['Policy stance', 'No refund after payment'],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-2xl border border-[#ecdfff] bg-white/85 p-4 shadow-sm"
-                  >
-                    <p className="text-sm text-slate-500">{label}</p>
-                    <p className="mt-2 text-lg font-semibold text-[#1f132d]">{value}</p>
-                  </div>
-                ))}
-              </div> */}
             </div>
 
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-[#eadcff] bg-gradient-to-br from-[#231433] via-[#4f2077] to-[#8d4dff] p-6 text-white shadow-[0_20px_60px_rgba(79,32,119,0.3)]">
-              <div className="absolute -right-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
-              <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-fuchsia-300/20 blur-3xl" />
-              <div className="relative space-y-4">
-                <img
-                  src={heroImage}
-                  alt=""
-                  className="mx-auto h-40 w-40 object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.2)]"
-                />
-                <div className="space-y-2 text-center">
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/75">Secure submission</p>
-                  <h3 className="text-2xl font-semibold">Private booking intake</h3>
-                  <p className="text-sm leading-6 text-white/80">
-                    Authenticated users can submit the bridal form and keep the workflow neatly
-                    organized.
-                  </p>
+            <div className="order-1 lg:order-2">
+              <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7b35a] bg-gradient-to-br from-[#4a3610] via-[#b58715] to-[#f1cc6b] p-4 text-white shadow-[0_20px_60px_rgba(181,135,21,0.3)] sm:p-6">
+                <div className="absolute -right-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-white/15 blur-3xl" />
+                <div className="relative overflow-hidden rounded-[1.4rem] border border-white/15 bg-black/15">
+                  <img
+                    src={heroImage}
+                    alt="Bridal showcase"
+                    className={`h-[280px] w-full select-none object-contain bg-[#f5d77a]/20 p-3 transition-opacity duration-500 sm:h-[360px] lg:h-[420px] ${
+                      heroImageVisible ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    draggable={false}
+                    onContextMenu={(event) => event.preventDefault()}
+                  />
                 </div>
               </div>
             </div>
@@ -312,10 +349,10 @@ export default function UserFormPage() {
         </section>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-6 lg:mt-8">
-          <section className="rounded-[2rem] border border-[#ecdfff] bg-white/90 p-6 shadow-[0_20px_60px_rgba(72,27,95,0.08)] sm:p-8">
+          <section className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
                   Bride details
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Customer information</h3>
@@ -391,9 +428,9 @@ export default function UserFormPage() {
           </section>
 
           <section className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-            <article className="rounded-[2rem] border border-[#ecdfff] bg-white/90 p-6 shadow-[0_20px_60px_rgba(72,27,95,0.08)] sm:p-8">
+            <article className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
                   Policy copy
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">
@@ -403,17 +440,17 @@ export default function UserFormPage() {
 
               <div className="mt-6 space-y-4">
                 {policyItems.map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-[#f0e6ff] bg-[#fbf8ff] p-4">
+                  <div key={item.title} className="rounded-2xl border border-[#f3e0a8] bg-[#fffaf0] p-4">
                     <h4 className="text-base font-semibold text-[#27163b]">{item.title}</h4>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{item.body}</p>
                   </div>
                 ))}
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-[#ecdfff] bg-white/90 p-6 shadow-[0_20px_60px_rgba(72,27,95,0.08)] sm:p-8">
+            <article className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
                   Booking details
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Package and approvals</h3>
@@ -449,7 +486,7 @@ export default function UserFormPage() {
                       name="packageAllItems"
                       checked={form.packageAllItems}
                       onChange={handleChange}
-                      className="h-4 w-4 rounded border-slate-300 text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                      className="h-4 w-4 rounded border-slate-300 text-[#b58715] focus:ring-[#b58715]"
                     />
                     Booking all listed items
                   </label>
@@ -497,14 +534,14 @@ export default function UserFormPage() {
                 ].map(([field, label]) => (
                   <label
                     key={field}
-                    className="flex items-start gap-3 rounded-2xl border border-[#f0e6ff] bg-[#fbf8ff] px-4 py-3"
+                    className="flex items-start gap-3 rounded-2xl border border-[#f3e0a8] bg-[#fffaf0] px-4 py-3"
                   >
                     <input
                       type="checkbox"
                       name={field}
                       checked={form[field as keyof FormState] as boolean}
                       onChange={handleChange}
-                      className="mt-1 h-4 w-4 rounded border-slate-300 text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-[#b58715] focus:ring-[#b58715]"
                     />
                     <span className="text-sm leading-6 text-slate-700">{label}</span>
                   </label>
@@ -513,39 +550,32 @@ export default function UserFormPage() {
             </article>
           </section>
 
-          <section className="rounded-[2rem] border border-[#ecdfff] bg-white/90 p-6 shadow-[0_20px_60px_rgba(72,27,95,0.08)] sm:p-8">
+          <section className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#8b5cf6]">
-                Sign off
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
+                Acknowledgement
               </p>
-              <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Customer and staff sign and date</h3>
+              <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">
+                Confirm you’ve read and accepted the policy
+              </h3>
             </div>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              <Field
-                label="Customer"
-                name="customerSignature"
-                value={form.customerSignature}
+            <label className="mt-6 flex items-start gap-3 rounded-2xl border border-[#f3e0a8] bg-[#fffaf0] px-4 py-4">
+              <input
+                type="checkbox"
+                name="policyAcknowledged"
+                checked={form.policyAcknowledged}
                 onChange={handleChange}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#b58715] focus:ring-[#b58715]"
               />
-              <Field
-                label="Consultant"
-                name="consultantSignature"
-                value={form.consultantSignature}
-                onChange={handleChange}
-              />
-              <Field label="M.D" name="mdSignature" value={form.mdSignature} onChange={handleChange} />
-              <Field
-                label="Sign and Date"
-                name="signatureDate"
-                type="date"
-                value={form.signatureDate}
-                onChange={handleChange}
-              />
-            </div>
+              <span className="text-sm leading-6 text-slate-700">
+                I acknowledge that I have read, understood, and agreed to all the terms and
+                conditions above.
+              </span>
+            </label>
           </section>
 
-          <div className="flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-[#ecdfff] bg-white/90 p-6 shadow-[0_20px_60px_rgba(72,27,95,0.08)] sm:flex-row sm:items-center sm:p-8">
+          <div className="flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:flex-row sm:items-center sm:p-8">
             <div>
               <p className="text-sm font-medium text-slate-500">Submission status</p>
               <p
@@ -571,7 +601,7 @@ export default function UserFormPage() {
                 <button
                   type="button"
                   onClick={downloadReceipt}
-                  className="inline-flex items-center justify-center rounded-full border border-[#e3d3ff] bg-white px-6 py-3 text-sm font-semibold text-[#6f2dbd] shadow-[0_14px_30px_rgba(111,45,189,0.12)] transition hover:bg-[#faf5ff]"
+                  className="inline-flex items-center justify-center rounded-full border border-[#d7b35a] bg-white px-6 py-3 text-sm font-semibold text-[#8f6510] shadow-[0_14px_30px_rgba(181,135,21,0.12)] transition hover:bg-[#fff8e5]"
                 >
                   Download confirmation
                 </button>
@@ -579,8 +609,8 @@ export default function UserFormPage() {
 
               <button
                 type="submit"
-                disabled={status === 'submitting'}
-                className="inline-flex items-center justify-center rounded-full bg-[#6f2dbd] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(111,45,189,0.28)] transition hover:bg-[#5c24a0] disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={status === 'submitting' || !form.policyAcknowledged}
+                className="inline-flex items-center justify-center rounded-full bg-[#b58715] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(181,135,21,0.28)] transition hover:bg-[#9a6f12] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {status === 'submitting' ? 'Submitting...' : 'Submit form'}
               </button>
@@ -610,7 +640,7 @@ function Field({ label, name, value, onChange, type = 'text', full }: FieldProps
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#8b5cf6]/10"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
       />
     </label>
   )
@@ -632,7 +662,7 @@ function SelectField({ label, name, value, onChange, options }: SelectFieldProps
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#8b5cf6]/10"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
       >
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
@@ -660,7 +690,7 @@ function TextAreaField({ label, name, value, onChange }: TextAreaFieldProps) {
         value={value}
         onChange={onChange}
         rows={4}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#8b5cf6]/10"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
       />
     </label>
   )

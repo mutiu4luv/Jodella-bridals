@@ -43,6 +43,7 @@ export type FormSubmission = {
   cancellationAcknowledged: boolean
   damagedItemAcknowledged: boolean
   valueAcknowledged: boolean
+  policyAcknowledged: boolean
   materialsReturned: boolean
   customerSignature: string
   consultantSignature: string

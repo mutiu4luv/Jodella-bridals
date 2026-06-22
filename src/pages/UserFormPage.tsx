@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
-import firstImage from '../assets/first.jpeg'
 import secondImage from '../assets/second.jpeg'
 import thirdImage from '../assets/third.jpeg'
 import fourthImage from '../assets/fourth.jpeg'
 import fifthImage from '../assets/fifth.jpeg'
 import sixthImage from '../assets/sixth.jpeg'
+import heroVideo from '../assets/video.mp4'
 import { api } from '../lib/api'
 
 type FormState = {
@@ -134,8 +134,6 @@ const policyItems = [
   },
 ]
 
-const galleryImages = [firstImage, secondImage, thirdImage, fourthImage, fifthImage, sixthImage]
-
 const packageOptions = [
   { name: 'Package 1', image: secondImage },
   { name: 'Package 2', image: thirdImage },
@@ -143,19 +141,6 @@ const packageOptions = [
   { name: 'Package 4', image: fifthImage },
   { name: 'Package 5', image: sixthImage },
 ]
-
-function shuffleQueue(items: string[]) {
-  const queue = [...items]
-
-  for (let index = queue.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1))
-    const temporary = queue[index]
-    queue[index] = queue[swapIndex]
-    queue[swapIndex] = temporary
-  }
-
-  return queue
-}
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -184,32 +169,8 @@ export default function UserFormPage() {
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
   const [idCardStatus, setIdCardStatus] = useState<'idle' | 'uploading' | 'error' | 'ready'>('idle')
   const [idCardMessage, setIdCardMessage] = useState('')
-  const [heroImage, setHeroImage] = useState(() => galleryImages[0])
-  const [heroImageVisible, setHeroImageVisible] = useState(true)
-  const heroQueueRef = useRef<string[]>(shuffleQueue(galleryImages.slice(1)))
   const navigate = useNavigate()
   const selectedPackage = packageOptions.find((item) => item.name === form.packageName) ?? null
-
-  useEffect(() => {
-    heroQueueRef.current = shuffleQueue(galleryImages.slice(1))
-
-    const intervalId = window.setInterval(() => {
-      if (heroQueueRef.current.length === 0) {
-        heroQueueRef.current = shuffleQueue(galleryImages.slice(1))
-      }
-
-      const nextImage = heroQueueRef.current.shift()
-      if (nextImage) {
-        setHeroImageVisible(false)
-        window.setTimeout(() => {
-          setHeroImage(nextImage)
-          setHeroImageVisible(true)
-        }, 240)
-      }
-    }, 4000)
-
-    return () => window.clearInterval(intervalId)
-  }, [])
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((current) => ({
@@ -409,21 +370,21 @@ export default function UserFormPage() {
             </div>
 
             <div className="order-1 lg:order-2">
-              <div className="relative overflow-hidden rounded-[1.75rem] border border-[#d7b35a] bg-gradient-to-br from-[#4a3610] via-[#b58715] to-[#f1cc6b] p-4 text-white shadow-[0_20px_60px_rgba(181,135,21,0.3)] sm:p-6">
+              <div className="relative min-h-[420px] overflow-hidden rounded-[1.75rem] border border-[#d7b35a] bg-[#4a3610] text-white shadow-[0_20px_60px_rgba(181,135,21,0.3)] sm:min-h-[540px] lg:min-h-[640px]">
+                <video
+                  src={heroVideo}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls={false}
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,54,16,0.18),rgba(74,54,16,0.22))]" />
                 <div className="absolute -right-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
                 <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-white/15 blur-3xl" />
-                <div className="relative overflow-hidden rounded-[1.4rem] border border-white/15 bg-black/15">
-                  <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#f5d77a]/20 p-3 sm:aspect-[16/10] lg:aspect-[4/3]">
-                    <img
-                      src={heroImage}
-                      alt="Bridal showcase"
-                      className={`block h-full w-full select-none object-contain object-center transition-opacity duration-500 ${
-                        heroImageVisible ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      draggable={false}
-                      onContextMenu={(event) => event.preventDefault()}
-                    />
-                  </div>
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                
                 </div>
               </div>
             </div>

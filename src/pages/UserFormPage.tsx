@@ -92,10 +92,10 @@ const policyItems = [
     title: 'Copy of Wedding Card',
     body: 'To be submitted either by hardcopy or softcopy before pickup.',
   },
-  {
-    title: 'Rental package chosen',
-    body: 'Indicate if the bride is booking all listed items or removing any items from the chosen package.',
-  },
+  // {
+  //   title: 'Rental package chosen',
+  //   body: 'Indicate if the bride is booking all listed items or removing any items from the chosen package.',
+  // },
   {
     title: 'Caution fee',
     body: 'A refundable caution fee of N20,000 must be deposited before items leave the store and is refunded once items are returned in good condition.',
@@ -352,19 +352,24 @@ export default function UserFormPage() {
                 <div className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
                   <h3>Dear Bride To Be,</h3>
                   <p>
-                    Thank you for choosing us to be part of your Beautiful love story, we are most
+                    Thank you for choosing us to be part of your beautiful love story, we are most
                     honored to help create this memory with you.
                   </p>
                   <p>
-                    To ensure a seamless Rental experience, please take a few moment to carefully
-                    read and complete our rental policy form and acknowledge your understanding.
+                    To ensure a seamless rental experience, please take a few moments to carefully
+                    read and complete our rental policy form and acknowledge it.
                   </p>
                   <p>
-                    As the information provided will help us serve you better, and also ensure that
-                    we both understand the Terms and conditions of our Rentals.
+                    Please note that the information provided will help us serve you better. 
                   </p>
                   <p>We look forward to being a part of your forever in love story.</p>
-                  <p>The jodella bridal team</p>
+
+                  <br />
+                  <br />
+
+                  <p>With Love from, 
+                  
+                    <h3>THE JODELLA BRIDAL TEAM</h3></p>
                 </div>
               </div>
             </div>
@@ -477,7 +482,7 @@ export default function UserFormPage() {
                   Policy copy
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">
-                  Terms and conditions
+                  Terms and Conditions
                 </h3>
               </div>
 
@@ -494,7 +499,7 @@ export default function UserFormPage() {
             <article className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
-                  Booking details
+                  Booking Details
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Package and approvals</h3>
               </div>
@@ -502,7 +507,7 @@ export default function UserFormPage() {
               <div className="mt-6 space-y-6">
                 <div>
                   <div className="flex items-center justify-between gap-3">
-                    <h4 className="font-semibold text-[#27163b]">Choose a package</h4>
+                    <h4 className="font-semibold text-[#27163b]">Choose a Package</h4>
                     <p className="text-sm text-slate-500">
                       Tap one package image so the client can see the exact option.
                     </p>
@@ -605,7 +610,7 @@ export default function UserFormPage() {
                   {!form.packageAllItems ? (
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {[
-                        ['a', 'packageItemA'],
+                        // ['a', 'packageItemA'],
                         ['b', 'packageItemB'],
                         ['c', 'packageItemC'],
                         ['d', 'packageItemD'],

@@ -47,10 +47,6 @@ export type FormSubmission = {
   idCardUrl: string
   idCardName: string
   materialsReturned: boolean
-  customerSignature: string
-  consultantSignature: string
-  mdSignature: string
-  signatureDate: string
   submittedBy?: SessionUser
   createdAt: string
 }

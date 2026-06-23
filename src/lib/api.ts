@@ -12,11 +12,13 @@ const apiBaseUrls = Array.from(
 
 class HttpError extends Error {
   status: number
+  missingFields?: string[]
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, missingFields?: string[]) {
     super(message)
     this.name = 'HttpError'
     this.status = status
+    this.missingFields = missingFields
   }
 }
 
@@ -42,7 +44,7 @@ async function request<T>(path: string, options: RequestOptions = {}) {
       const payload = await response.json().catch(() => null)
 
       if (!response.ok) {
-        throw new HttpError(payload?.message || 'Request failed.', response.status)
+        throw new HttpError(payload?.message || 'Request failed.', response.status, payload?.missingFields)
       }
 
       return payload as T

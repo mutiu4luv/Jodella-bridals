@@ -58,10 +58,6 @@ const detailFields: Array<{ label: string; key: keyof FormSubmission }> = [
   { label: 'ID card name', key: 'idCardName' },
   { label: 'ID card URL', key: 'idCardUrl' },
   { label: 'Materials returned', key: 'materialsReturned' },
-  { label: 'Customer signature', key: 'customerSignature' },
-  { label: 'Consultant signature', key: 'consultantSignature' },
-  { label: 'M.D signature', key: 'mdSignature' },
-  { label: 'Signature date', key: 'signatureDate' },
   { label: 'Submitted at', key: 'createdAt' },
 ]
 
@@ -75,7 +71,7 @@ export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
-  const [activePanel, setActivePanel] = useState<'dashboard' | 'details' | 'returned'>('dashboard')
+  const [activePanel, setActivePanel] = useState<'dashboard' | 'details' | 'submitted'>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -194,7 +190,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const root = returnedScrollRef.current
     const target = returnedLoadMoreRef.current
-    if (!root || !target || activePanel !== 'returned' || !pagination?.hasMore || loadingMore) {
+    if (!root || !target || activePanel !== 'submitted' || !pagination?.hasMore || loadingMore) {
       return
     }
 
@@ -217,7 +213,7 @@ export default function AdminDashboard() {
 
     return [
       { label: 'Total submissions', value: String(summary.total), note: 'All form entries received' },
-      { label: 'Materials returned', value: String(summary.returned), note: 'Marked as returned' },
+      { label: 'Submitted', value: String(summary.returned), note: 'Marked as submitted' },
       { label: 'Yet to return', value: String(summary.pending), note: 'Still pending on the dashboard' },
       {
         label: 'Latest entry',
@@ -255,7 +251,7 @@ export default function AdminDashboard() {
     ]
   }, [summary])
 
-  const returnedSubmissions = useMemo(
+  const submittedSubmissions = useMemo(
     () => submissions.filter((submission) => submission.materialsReturned),
     [submissions],
   )
@@ -272,7 +268,7 @@ export default function AdminDashboard() {
     setIsSidebarOpen(false)
   }, [])
 
-  const openPanel = useCallback((panel: 'dashboard' | 'details' | 'returned') => {
+  const openPanel = useCallback((panel: 'dashboard' | 'details' | 'submitted') => {
     setActivePanel(panel)
     setIsSidebarOpen(false)
   }, [])
@@ -377,7 +373,7 @@ export default function AdminDashboard() {
                 {[
                   { key: 'dashboard' as const, label: 'Dashboard' },
                   { key: 'details' as const, label: 'Submission details' },
-                  { key: 'returned' as const, label: 'Returned client form' },
+                    { key: 'submitted' as const, label: 'Submitted client form' },
                 ].map((item) => (
                   <button
                     key={item.key}
@@ -439,14 +435,14 @@ export default function AdminDashboard() {
                         Dashboard overview
                       </p>
                       <h2 className="mt-1 text-3xl font-semibold text-[#10261a]">
-                        {activePanel === 'returned'
-                          ? 'Returned client form'
+                        {activePanel === 'submitted'
+                          ? 'Submitted client form'
                           : activePanel === 'details'
                             ? 'Submission details'
                             : 'Website monitoring center'}
                       </h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                        Track every bridal submission, review details, and manage returned materials with a clean operations view.
+                        Track every bridal submission, review details, and separate submitted forms from pending ones with a clean operations view.
                       </p>
                     </div>
                   </div>
@@ -530,7 +526,7 @@ export default function AdminDashboard() {
                         ))}
                         {pendingSubmissions.length === 0 ? (
                           <div className="px-4 py-10 text-center text-sm text-slate-500">
-                            Everyone has returned their materials.
+                            Everyone has submitted their form.
                           </div>
                         ) : null}
                       </div>
@@ -541,8 +537,8 @@ export default function AdminDashboard() {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#0b5f32]">
-                          {activePanel === 'returned'
-                            ? 'Returned client form'
+                          {activePanel === 'submitted'
+                            ? 'Submitted client form'
                             : activePanel === 'details'
                               ? 'Submission detail'
                               : 'Dashboard overview'}
@@ -563,12 +559,12 @@ export default function AdminDashboard() {
                             ? 'Saving...'
                             : selectedSubmission.materialsReturned
                               ? 'Mark pending'
-                              : 'Mark returned'}
-                        </button>
-                      ) : null}
+                              : 'Mark submitted'}
+                      </button>
+                    ) : null}
                     </div>
 
-                    {activePanel === 'returned' ? (
+                    {activePanel === 'submitted' ? (
                       <div className="mt-6 space-y-4">
                         <div className="overflow-hidden rounded-[20px] border border-slate-100">
                           <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.7fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -581,7 +577,7 @@ export default function AdminDashboard() {
                             ref={returnedScrollRef}
                             className="max-h-[520px] divide-y divide-slate-100 overflow-auto"
                           >
-                            {returnedSubmissions.map((submission) => (
+                            {submittedSubmissions.map((submission) => (
                               <button
                                 key={submission._id}
                                 type="button"
@@ -596,18 +592,18 @@ export default function AdminDashboard() {
                                 <span className="font-semibold text-[#10261a]">{submission.brideName}</span>
                                 <span className="text-slate-600">{submission.bridePhone}</span>
                                 <span className="text-slate-600">{submission.weddingDate}</span>
-                                <span className="text-slate-600">Returned</span>
+                                <span className="text-slate-600">Submitted</span>
                               </button>
                             ))}
-                            {returnedSubmissions.length === 0 ? (
+                            {submittedSubmissions.length === 0 ? (
                               <div className="px-4 py-10 text-center text-sm text-slate-500">
-                                No returned clients yet.
+                                No submitted clients yet.
                               </div>
                             ) : null}
                             <div ref={returnedLoadMoreRef} className="h-6" />
                             <div className="px-4 py-4 text-center text-xs text-slate-400">
                               {loadingMore
-                                ? 'Loading more returned clients...'
+                                ? 'Loading more submitted clients...'
                                 : pagination.hasMore
                                   ? 'Scroll to load more'
                                   : 'All records loaded'}
@@ -652,7 +648,7 @@ export default function AdminDashboard() {
                               ref={detailsScrollRef}
                               className="max-h-[520px] divide-y divide-slate-100 overflow-auto"
                             >
-                              {submissions.map((submission) => (
+                              {pendingSubmissions.map((submission) => (
                                 <button
                                   key={submission._id}
                                   type="button"
@@ -667,14 +663,12 @@ export default function AdminDashboard() {
                                   <span className="font-semibold text-[#10261a]">{submission.brideName}</span>
                                   <span className="text-slate-600">{submission.bridePhone}</span>
                                   <span className="text-slate-600">{submission.weddingDate}</span>
-                                  <span className="text-slate-600">
-                                    {submission.materialsReturned ? 'Returned' : 'Pending'}
-                                  </span>
+                                  <span className="text-slate-600">Pending</span>
                                 </button>
                               ))}
-                              {submissions.length === 0 ? (
+                              {pendingSubmissions.length === 0 ? (
                                 <div className="px-4 py-10 text-center text-sm text-slate-500">
-                                  No submissions yet.
+                                  No pending submissions yet.
                                 </div>
                               ) : null}
                               <div ref={loadMoreRef} className="h-6" />
@@ -729,8 +723,7 @@ export default function AdminDashboard() {
                                 field.key === 'homeAddress' ||
                                 field.key === 'churchAddress' ||
                                 field.key === 'husbandAddress' ||
-                                field.key === 'socialAddress' ||
-                                field.key === 'consultantSignature'
+                                field.key === 'socialAddress'
                               }
                             />
                           ))}
@@ -879,7 +872,7 @@ function SubmissionPreviewModal({
               className="rounded-full bg-[#0b5f32] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#094d29] disabled:opacity-70"
               disabled={saving}
             >
-              {saving ? 'Saving...' : submission.materialsReturned ? 'Mark pending' : 'Mark returned'}
+              {saving ? 'Saving...' : submission.materialsReturned ? 'Mark pending' : 'Mark submitted'}
             </button>
             <button
               type="button"
@@ -897,8 +890,8 @@ function SubmissionPreviewModal({
               <section className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
-                      Chosen package
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                        Chosen package
                     </p>
                     <h4 className="mt-1 text-xl font-semibold text-[#10261a]">
                       {submission.packageName}
@@ -919,21 +912,20 @@ function SubmissionPreviewModal({
             ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {detailFields.map((field) => (
-                <DetailCard
-                  key={field.key}
-                  label={field.label}
-                  value={formatFieldValue(submission[field.key], field.key)}
-                  multiline={
-                    field.key === 'removedItems' ||
-                    field.key === 'homeAddress' ||
-                    field.key === 'churchAddress' ||
-                    field.key === 'husbandAddress' ||
-                    field.key === 'socialAddress' ||
-                    field.key === 'consultantSignature'
-                  }
-                />
-              ))}
+                {detailFields.map((field) => (
+                  <DetailCard
+                    key={field.key}
+                    label={field.label}
+                    value={formatFieldValue(submission[field.key], field.key)}
+                    multiline={
+                      field.key === 'removedItems' ||
+                      field.key === 'homeAddress' ||
+                      field.key === 'churchAddress' ||
+                      field.key === 'husbandAddress' ||
+                      field.key === 'socialAddress'
+                    }
+                  />
+                ))}
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent, type Ref } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
 import secondImage from '../assets/second.jpeg'
@@ -42,10 +42,6 @@ type FormState = {
   policyAcknowledged: boolean
   idCardUrl: string
   idCardName: string
-  customerSignature: string
-  consultantSignature: string
-  mdSignature: string
-  signatureDate: string
 }
 
 const initialForm: FormState = {
@@ -81,10 +77,6 @@ const initialForm: FormState = {
   policyAcknowledged: false,
   idCardUrl: '',
   idCardName: '',
-  customerSignature: '',
-  consultantSignature: '',
-  mdSignature: '',
-  signatureDate: '',
 }
 
 const policyItems = [
@@ -162,15 +154,40 @@ function fileToDataUrl(file: File) {
   })
 }
 
+function formatMissingFieldLabel(fieldName: string) {
+  const labels: Record<string, string> = {
+    brideName: 'Name',
+    bridePhone: 'Phone No',
+    weddingDate: 'Wedding Date',
+    packageName: 'Choose a Package',
+    idCardUrl: 'Upload a valid ID card',
+    policyAcknowledged: 'Policy acknowledgement',
+  }
+
+  return labels[fieldName] || fieldName
+}
+
 export default function UserFormPage() {
   const [form, setForm] = useState<FormState>(initialForm)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+  const [missingFields, setMissingFields] = useState<string[]>([])
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
   const [idCardStatus, setIdCardStatus] = useState<'idle' | 'uploading' | 'error' | 'ready'>('idle')
   const [idCardMessage, setIdCardMessage] = useState('')
   const navigate = useNavigate()
   const selectedPackage = packageOptions.find((item) => item.name === form.packageName) ?? null
+
+  const focusMissingField = (fieldName: string) => {
+    const element = document.getElementById(`field-${fieldName}`)
+    if (!element) {
+      return
+    }
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const focusTarget = element.querySelector<HTMLElement>('input, textarea, select, button')
+    focusTarget?.focus?.()
+  }
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((current) => ({
@@ -230,6 +247,7 @@ export default function UserFormPage() {
     event.preventDefault()
     setStatus('submitting')
     setMessage('')
+    setMissingFields([])
 
     try {
       if (!form.policyAcknowledged) {
@@ -253,6 +271,21 @@ export default function UserFormPage() {
       setIdCardMessage('')
     } catch (error) {
       setStatus('error')
+      if (error instanceof Error && 'missingFields' in error) {
+        const backendError = error as Error & { missingFields?: string[] }
+        const fields = backendError.missingFields ?? []
+        setMissingFields(fields)
+        setMessage(
+          fields.length > 0
+            ? `Please complete: ${fields.map(formatMissingFieldLabel).join(', ')}`
+            : error.message,
+        )
+        if (fields.length > 0) {
+          window.setTimeout(() => focusMissingField(fields[0]), 50)
+        }
+        return
+      }
+
       setMessage(error instanceof Error ? error.message : 'Submission failed.')
     }
   }
@@ -298,10 +331,6 @@ export default function UserFormPage() {
       `Policy Acknowledged: ${submittedForm.policyAcknowledged ? 'Yes' : 'No'}`,
       `Valid ID Card: ${submittedForm.idCardName}`,
       `ID Card URL: ${submittedForm.idCardUrl}`,
-      `Customer Signature: ${submittedForm.customerSignature}`,
-      `Consultant Signature: ${submittedForm.consultantSignature}`,
-      `M.D Signature: ${submittedForm.mdSignature}`,
-      `Signature Date: ${submittedForm.signatureDate}`,
     ]
 
     const file = new Blob([`${lines.join('\n')}\n`], { type: 'text/plain;charset=utf-8' })
@@ -397,6 +426,13 @@ export default function UserFormPage() {
         </section>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-6 lg:mt-8">
+          {missingFields.length > 0 ? (
+            <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              <p className="font-semibold">Please finish these fields:</p>
+              <p className="mt-1">{missingFields.map(formatMissingFieldLabel).join(' • ')}</p>
+            </div>
+          ) : null}
+
           <section className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -412,12 +448,21 @@ export default function UserFormPage() {
             </div>
 
             <div className="mt-8 grid gap-5 md:grid-cols-2">
-              <Field label="Name" name="brideName" value={form.brideName} onChange={handleChange} />
+              <Field
+                label="Name"
+                name="brideName"
+                value={form.brideName}
+                onChange={handleChange}
+                highlight={missingFields.includes('brideName')}
+                id="field-brideName"
+              />
               <Field
                 label="Phone No"
                 name="bridePhone"
                 value={form.bridePhone}
                 onChange={handleChange}
+                highlight={missingFields.includes('bridePhone')}
+                id="field-bridePhone"
               />
               <Field
                 label="Home Address"
@@ -439,6 +484,8 @@ export default function UserFormPage() {
                 type="date"
                 value={form.weddingDate}
                 onChange={handleChange}
+                highlight={missingFields.includes('weddingDate')}
+                id="field-weddingDate"
               />
               <Field
                 label="Husband's / Other relations Name"
@@ -505,7 +552,10 @@ export default function UserFormPage() {
               </div>
 
               <div className="mt-6 space-y-6">
-                <div>
+                <div
+                  id="field-packageName"
+                  className={missingFields.includes('packageName') ? 'rounded-[1.75rem] ring-4 ring-amber-100' : ''}
+                >
                   <div className="flex items-center justify-between gap-3">
                     <h4 className="font-semibold text-[#27163b]">Choose a Package</h4>
                     <p className="text-sm text-slate-500">
@@ -610,7 +660,7 @@ export default function UserFormPage() {
                   {!form.packageAllItems ? (
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {[
-                        // ['a', 'packageItemA'],
+                        ['a', 'packageItemA'],
                         ['b', 'packageItemB'],
                         ['c', 'packageItemC'],
                         ['d', 'packageItemD'],
@@ -640,12 +690,19 @@ export default function UserFormPage() {
                   />
                 </div>
 
-                <div className="rounded-2xl border border-[#f3e0a8] bg-[#fffaf0] p-4">
+                <div
+                  id="field-idCardUrl"
+                  className={`rounded-2xl border p-4 ${
+                    missingFields.includes('idCardUrl')
+                      ? 'border-amber-300 bg-amber-50 ring-4 ring-amber-100'
+                      : 'border-[#f3e0a8] bg-[#fffaf0]'
+                  }`}
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h4 className="font-semibold text-[#27163b]">Submit a valid ID card</h4>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
-                        Upload a clear image of a valid ID card. The file is saved to Cloudinary.
+                        Upload a clear image of a valid ID card. 
                       </p>
                     </div>
                     <div className="text-right text-sm">
@@ -720,7 +777,12 @@ export default function UserFormPage() {
             </article>
           </section>
 
-          <section className="rounded-[2rem] border border-[#e6d4a6] bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
+          <section
+            id="field-policyAcknowledged"
+            className={`rounded-[2rem] border bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8 ${
+              missingFields.includes('policyAcknowledged') ? 'border-amber-300 ring-4 ring-amber-100' : 'border-[#e6d4a6]'
+            }`}
+          >
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
                 Acknowledgement
@@ -797,20 +859,37 @@ type FieldProps = {
   name: keyof FormState
   value: string
   onChange: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  inputRef?: Ref<HTMLInputElement>
+  highlight?: boolean
+  id?: string
   type?: string
   full?: boolean
 }
 
-function Field({ label, name, value, onChange, type = 'text', full }: FieldProps) {
+function Field({
+  label,
+  name,
+  value,
+  onChange,
+  inputRef,
+  highlight,
+  id,
+  type = 'text',
+  full,
+}: FieldProps) {
   return (
     <label className={full ? 'md:col-span-2' : ''}>
       <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
       <input
         type={type}
         name={name}
+        id={id}
         value={value}
         onChange={onChange}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10"
+        ref={inputRef}
+        className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#b58715] focus:ring-4 focus:ring-[#b58715]/10 ${
+          highlight ? 'border-amber-300 ring-4 ring-amber-100' : 'border-slate-200'
+        }`}
       />
     </label>
   )

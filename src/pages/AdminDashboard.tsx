@@ -71,11 +71,12 @@ export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
-  const [activePanel, setActivePanel] = useState<'dashboard' | 'details' | 'submitted'>('dashboard')
+  const [activePanel, setActivePanel] = useState<'dashboard' | 'details' | 'returned'>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<{ url: string; label: string } | null>(null)
   const [summary, setSummary] = useState<SummaryState>({
     total: 0,
     returned: 0,
@@ -190,7 +191,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const root = returnedScrollRef.current
     const target = returnedLoadMoreRef.current
-    if (!root || !target || activePanel !== 'submitted' || !pagination?.hasMore || loadingMore) {
+    if (!root || !target || activePanel !== 'returned' || !pagination?.hasMore || loadingMore) {
       return
     }
 
@@ -251,7 +252,7 @@ export default function AdminDashboard() {
     ]
   }, [summary])
 
-  const submittedSubmissions = useMemo(
+  const returnedSubmissions = useMemo(
     () => submissions.filter((submission) => submission.materialsReturned),
     [submissions],
   )
@@ -268,7 +269,7 @@ export default function AdminDashboard() {
     setIsSidebarOpen(false)
   }, [])
 
-  const openPanel = useCallback((panel: 'dashboard' | 'details' | 'submitted') => {
+  const openPanel = useCallback((panel: 'dashboard' | 'details' | 'returned') => {
     setActivePanel(panel)
     setIsSidebarOpen(false)
   }, [])
@@ -373,7 +374,7 @@ export default function AdminDashboard() {
                 {[
                   { key: 'dashboard' as const, label: 'Dashboard' },
                   { key: 'details' as const, label: 'Submission details' },
-                    { key: 'submitted' as const, label: 'Submitted client form' },
+                  { key: 'returned' as const, label: 'Returned client form' },
                 ].map((item) => (
                   <button
                     key={item.key}
@@ -435,14 +436,14 @@ export default function AdminDashboard() {
                         Dashboard overview
                       </p>
                       <h2 className="mt-1 text-3xl font-semibold text-[#10261a]">
-                        {activePanel === 'submitted'
-                          ? 'Submitted client form'
+                        {activePanel === 'returned'
+                          ? 'Returned client form'
                           : activePanel === 'details'
                             ? 'Submission details'
                             : 'Website monitoring center'}
                       </h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                        Track every bridal submission, review details, and separate submitted forms from pending ones with a clean operations view.
+                        Track every bridal submission, review details, and separate returned forms from pending ones with a clean operations view.
                       </p>
                     </div>
                   </div>
@@ -537,8 +538,8 @@ export default function AdminDashboard() {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#0b5f32]">
-                          {activePanel === 'submitted'
-                            ? 'Submitted client form'
+                          {activePanel === 'returned'
+                            ? 'Returned client form'
                             : activePanel === 'details'
                               ? 'Submission detail'
                               : 'Dashboard overview'}
@@ -564,46 +565,77 @@ export default function AdminDashboard() {
                     ) : null}
                     </div>
 
-                    {activePanel === 'submitted' ? (
+                    {activePanel === 'returned' ? (
                       <div className="mt-6 space-y-4">
                         <div className="overflow-hidden rounded-[20px] border border-slate-100">
-                          <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.7fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.7fr_1.1fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                             <span>Bride</span>
                             <span>Phone</span>
                             <span>Wedding date</span>
                             <span>Status</span>
+                            <span>Images</span>
                           </div>
                           <div
                             ref={returnedScrollRef}
                             className="max-h-[520px] divide-y divide-slate-100 overflow-auto"
                           >
-                            {submittedSubmissions.map((submission) => (
-                              <button
+                            {returnedSubmissions.map((submission) => (
+                              <div
                                 key={submission._id}
-                                type="button"
                                 onClick={() => {
                                   setSelectedId(submission._id)
                                   setPreviewId(submission._id)
                                 }}
-                                className={`grid w-full grid-cols-[1.2fr_0.8fr_0.9fr_0.7fr] gap-3 px-4 py-4 text-left transition ${
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault()
+                                    setSelectedId(submission._id)
+                                    setPreviewId(submission._id)
+                                  }
+                                }}
+                                className={`grid w-full grid-cols-[1.2fr_0.8fr_0.9fr_0.7fr_1.1fr] gap-3 px-4 py-4 text-left transition ${
                                   selectedSubmission?._id === submission._id ? 'bg-emerald-50' : 'hover:bg-slate-50'
                                 }`}
                               >
                                 <span className="font-semibold text-[#10261a]">{submission.brideName}</span>
                                 <span className="text-slate-600">{submission.bridePhone}</span>
                                 <span className="text-slate-600">{submission.weddingDate}</span>
-                                <span className="text-slate-600">Submitted</span>
-                              </button>
+                                <span className="text-slate-600">Returned</span>
+                                <span className="flex items-center gap-2">
+                                  <ImageThumb
+                                    src={submission.packageImageUrl}
+                                    label={`${submission.brideName} package image`}
+                                    onOpen={() =>
+                                      setImagePreview({
+                                        url: submission.packageImageUrl,
+                                        label: `${submission.brideName} package image`,
+                                      })
+                                    }
+                                  />
+                                  <ImageThumb
+                                    src={submission.idCardUrl}
+                                    label={`${submission.brideName} ID card`}
+                                    onOpen={() =>
+                                      setImagePreview({
+                                        url: submission.idCardUrl,
+                                        label: `${submission.brideName} ID card`,
+                                      })
+                                    }
+                                  />
+                                </span>
+                              </div>
                             ))}
-                            {submittedSubmissions.length === 0 ? (
+                            {returnedSubmissions.length === 0 ? (
                               <div className="px-4 py-10 text-center text-sm text-slate-500">
-                                No submitted clients yet.
+                                No returned clients yet.
                               </div>
                             ) : null}
                             <div ref={returnedLoadMoreRef} className="h-6" />
                             <div className="px-4 py-4 text-center text-xs text-slate-400">
                               {loadingMore
-                                ? 'Loading more submitted clients...'
+                                ? 'Loading more returned clients...'
                                 : pagination.hasMore
                                   ? 'Scroll to load more'
                                   : 'All records loaded'}
@@ -749,6 +781,37 @@ export default function AdminDashboard() {
           onToggleReturned={() => void requestToggleReturned(previewSubmission)}
           saving={savingId === previewSubmission._id}
         />
+      ) : null}
+
+      {imagePreview ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-[0_30px_120px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                  Cloudinary image
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-[#10261a]">{imagePreview.label}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImagePreview(null)}
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-[#f7faf7] p-4">
+              <div className="flex max-h-[78vh] items-center justify-center overflow-hidden rounded-[20px] border border-slate-100 bg-white">
+                <img
+                  src={imagePreview.url}
+                  alt={imagePreview.label}
+                  className="max-h-[78vh] w-full object-contain object-center"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       ) : null}
     </main>
   )
@@ -911,6 +974,60 @@ function SubmissionPreviewModal({
               </section>
             ) : null}
 
+            <section className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-[24px] border border-emerald-100 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                  Package image
+                </p>
+                <div className="mt-3 overflow-hidden rounded-[20px] border border-emerald-100 bg-[#f7fbf7]">
+                  {submission.packageImageUrl ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.open(submission.packageImageUrl, '_blank', 'noopener,noreferrer')
+                      }
+                      className="block w-full"
+                      aria-label="Open package image in a new tab"
+                    >
+                      <img
+                        src={submission.packageImageUrl}
+                        alt={`${submission.brideName} package image`}
+                        className="h-56 w-full object-contain object-center"
+                      />
+                    </button>
+                  ) : (
+                    <div className="px-4 py-16 text-center text-sm text-slate-400">No package image</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-emerald-100 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0b5f32]">
+                  ID card image
+                </p>
+                <div className="mt-3 overflow-hidden rounded-[20px] border border-emerald-100 bg-[#f7fbf7]">
+                  {submission.idCardUrl ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.open(submission.idCardUrl, '_blank', 'noopener,noreferrer')
+                      }
+                      className="block w-full"
+                      aria-label="Open ID card image in a new tab"
+                    >
+                      <img
+                        src={submission.idCardUrl}
+                        alt={`${submission.brideName} ID card`}
+                        className="h-56 w-full object-contain object-center"
+                      />
+                    </button>
+                  ) : (
+                    <div className="px-4 py-16 text-center text-sm text-slate-400">No ID card image</div>
+                  )}
+                </div>
+              </div>
+            </section>
+
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {detailFields.map((field) => (
                   <DetailCard
@@ -931,5 +1048,34 @@ function SubmissionPreviewModal({
         </div>
       </div>
     </div>
+  )
+}
+
+function ImageThumb({
+  src,
+  label,
+  onOpen,
+}: {
+  src?: string
+  label: string
+  onOpen: () => void
+}) {
+  if (!src) {
+    return <span className="text-xs text-slate-400">No image</span>
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation()
+        onOpen()
+      }}
+      className="overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-sm"
+      aria-label={label}
+      title={label}
+    >
+      <img src={src} alt={label} className="h-12 w-12 object-cover" />
+    </button>
   )
 }

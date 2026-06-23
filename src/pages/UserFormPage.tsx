@@ -6,6 +6,7 @@ import thirdImage from '../assets/third.jpeg'
 import fourthImage from '../assets/fourth.jpeg'
 import fifthImage from '../assets/fifth.jpeg'
 import sixthImage from '../assets/sixth.jpeg'
+import firstImage from '../assets/first.jpeg'
 import heroVideo from '../assets/video.mp4'
 import { api } from '../lib/api'
 
@@ -132,6 +133,7 @@ const packageOptions = [
   { name: 'Package 3', image: fourthImage },
   { name: 'Package 4', image: fifthImage },
   { name: 'Package 5', image: sixthImage },
+  { name: 'Package 6', image: firstImage },
 ]
 
 function fileToDataUrl(file: File) {

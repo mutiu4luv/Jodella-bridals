@@ -779,6 +779,42 @@ export default function UserFormPage() {
             </article>
           </section>
 
+          <section className="rounded-[2rem] border border-[#e6d4a6] bg-[#fffdf4] p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8">
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
+                  Contact us
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold text-[#1f132d]">Need help or have questions?</h3>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                  For further enquiries call or WhatsApp us on <span className="font-semibold text-[#8f6510]">08061666969</span>.
+                </p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Thank you for your patronage.
+                </p>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-[#f3e0a8] bg-white p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#b58715]">
+                  Please pay here
+                </p>
+                <div className="mt-4 space-y-4 text-sm leading-7 text-slate-700">
+                  <div className="rounded-2xl bg-[#fffaf0] px-4 py-3">
+                    <p className="font-semibold text-[#1f132d]">Moniepoint</p>
+                    <p className="mt-1 text-[#8f6510]">5148419627</p>
+                    <p className="mt-1">Jodella Bridals</p>
+                  </div>
+
+                  <div className="rounded-2xl bg-[#fffaf0] px-4 py-3">
+                    <p className="font-semibold text-[#1f132d]">Zenith Bank</p>
+                    <p className="mt-1 text-[#8f6510]">1312024663</p>
+                    <p className="mt-1">joedellabridals AND OCCASSIONS</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section
             id="field-policyAcknowledged"
             className={`rounded-[2rem] border bg-white/90 p-6 shadow-[0_20px_60px_rgba(181,135,21,0.08)] sm:p-8 ${

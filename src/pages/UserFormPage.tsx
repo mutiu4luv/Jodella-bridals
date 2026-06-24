@@ -362,13 +362,13 @@ export default function UserFormPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
+            {/* <button
               type="button"
               onClick={() => navigate('/login')}
               className="rounded-full border border-[#d7b35a] bg-white px-5 py-3 text-sm font-semibold text-[#8f6510] transition hover:bg-[#fff8e5]"
             >
               Login 
-            </button>
+            </button> */}
           </div>
         </header>
 

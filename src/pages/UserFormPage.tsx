@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type ChangeEventHandler, type FormEvent, type Ref } from 'react'
-import { useNavigate } from 'react-router-dom'
+// import { useNavigate } from 'react-router-dom'
 import logoImage from '../assets/logo.jpeg'
 import secondImage from '../assets/second.jpeg'
 import thirdImage from '../assets/third.jpeg'
@@ -177,7 +177,7 @@ export default function UserFormPage() {
   const [submittedForm, setSubmittedForm] = useState<FormState | null>(null)
   const [idCardStatus, setIdCardStatus] = useState<'idle' | 'uploading' | 'error' | 'ready'>('idle')
   const [idCardMessage, setIdCardMessage] = useState('')
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const selectedPackage = packageOptions.find((item) => item.name === form.packageName) ?? null
 
   const focusMissingField = (fieldName: string) => {
